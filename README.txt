@@ -1,0 +1,1 @@
+A simple game framework for Python built on top of SFML 2 and pysfml2-cython.

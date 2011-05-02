@@ -1,0 +1,5 @@
+The princess image comes from the Planet Cute tile set:
+http://www.lostgarden.com/2007/05/dancs-miraculously-flexible-game.html
+
+The rpg sprite walk spritesheets comes from OpenGameArt.org:
+http://www.opengameart.org/content/2d-rpg-character-walk-spritesheet
