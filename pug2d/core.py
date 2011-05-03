@@ -160,7 +160,8 @@ class Game(object):
             if self.show_fps:
                 self.window.view = self.window.default_view
                 try:
-                    self.fps_text.string = '%.2f' % (1.0/self.window.frame_time)
+                    fps = (1.0/self.window.frame_time)
+                    self.fps_text.string = '{:7.2f}'.format(fps) 
                 except ZeroDivisionError:
                     pass
                 self.window.draw(self.fps_text)
@@ -222,7 +223,7 @@ class Actor(object):
     def update(self, game, dt):
         for action in self.actions:
             action.pause(dt == 0)
-            action.update(self, game, dt)
+            action.do_update(self, game, dt)
         self.actions = [act for act in self.actions if not act.finished]
     
     def draw(self, window):
@@ -233,9 +234,11 @@ class Actor(object):
 
     def add_action(self, action):
         self.actions.append(action)
+        action.on_assign(self)
 
     def remove_action(self, action):
         self.actions.remove(action)
+        action.on_remove(self)
     
     def replace_action(self, old_action, new_action):
         self.actions.remove(old_action)
