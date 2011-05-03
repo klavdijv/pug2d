@@ -38,7 +38,7 @@ class Level1(core.Level):
         layer2.add_actor(core.Actor(text))
         self.add_layer(layer2)
         
-    def update(self, dt):
+    def update(self, game, dt):
         view = self.layers[0].cameras[0].object
         x, y = view.center
         
@@ -51,7 +51,7 @@ class Level1(core.Level):
         y += self.speed_y*dt
         view.center = (x, y)
 #        view.rotate(15*dt)
-        super(Level1, self).update(dt)
+        super(Level1, self).update(game, dt)
                 
 
 game = core.Game(800, 600)
