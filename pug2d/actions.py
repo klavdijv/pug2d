@@ -5,13 +5,31 @@ from .core import GameClock
 class Action(object):
     
     def __init__(self):
+        self.started  = False
         self.finished = False
-        
+    
+    def on_assign(self, actor):
+        pass
+    
+    def on_start(self, actor):
+        pass
+    
+    def on_end(self, actor):
+        pass
+    
     def finish(self):
         self.finished = True
 
     def update(self, actor, game, dt):
         pass
+    
+    def do_update(self, actor, game, dt):
+        if not self.started:
+            self.on_start(actor)
+            self.started = True
+        self.update(actor, game, dt)
+        if self.finished:
+            self.on_end(actor)
     
     def reset(self):
         self.finished = False
@@ -55,7 +73,7 @@ class Sequence(Action):
             return
         super(Sequence, self).update(actor, game, dt)
         for action in self.actions:
-            action.update(actor, game, dt)
+            action.do_update(actor, game, dt)
         self.actions = [act for act in self.actions if not act.finished]
         if not self.actions:
             self.finished = True
@@ -70,7 +88,11 @@ class Sequence(Action):
         super(Sequence, self).pause(value)
         for action in self.actions:
             action.pause(value)
-
+    
+    def on_assign(self, actor):
+        for action in self.actions:
+            action.on_assign(actor)
+    
 
 class Chain(Action):
     
@@ -84,7 +106,7 @@ class Chain(Action):
             return
         super(Chain, self).update(actor, game, dt)
         action = self.actions[0]
-        action.update(actor, game, dt)
+        action.do_update(actor, game, dt)
         if action.finished:
             self.actions.pop(0)
             if self.actions:
@@ -104,6 +126,10 @@ class Chain(Action):
         for action in self.actions:
             action.pause(value)
 
+    def on_assign(self, actor):
+        for action in self.actions:
+            action.on_assign(actor)
+    
 
 class Repeat(Action):
     
@@ -117,7 +143,7 @@ class Repeat(Action):
         if self.finished:
             return
         super(Repeat, self).update(actor, game, dt)
-        self.action.update(actor, game, dt)
+        self.action.do_update(actor, game, dt)
         if self.action.finished:
             self.count += 1
             if self.num == 0 or self.num > self.count:
@@ -133,6 +159,9 @@ class Repeat(Action):
     def pause(self, value):
         super(Repeat, self).pause(value)
         self.action.pause(value)
+    
+    def on_assign(self, actor):
+        self.action.on_assign(actor)
 
 
 # Implementations
@@ -179,13 +208,12 @@ class MoveTo(TimedAction):
         super(MoveTo, self).__init__(time)
         self.dx = x
         self.dy = y
-        self.started = False
+    
+    def on_start(self, actor):
+        self.dx = (self.dx - actor.object.x)/self.time
+        self.dy = (self.dy - actor.object.y)/self.time
     
     def update(self, actor, game, dt):
-        if not self.started:
-            self.dx = (self.dx - actor.object.x)/self.time
-            self.dy = (self.dy - actor.object.y)/self.time
-            self.started = True
         actor.object.move(dt*self.dx, dt*self.dy)
         super(MoveTo, self).update(actor, game, dt)
 
@@ -205,12 +233,11 @@ class RotateTo(TimedAction):
     def __init__(self, time, alpha):
         super(RotateTo, self).__init__(time)
         self.alpha = alpha
-        self.started = False
+    
+    def on_start(self, actor):
+        self.alpha = (self.alpha-actor.object.rotation)/self.time
     
     def update(self, actor, game, dt):
-        if not self.started:
-            self.alpha = (self.alpha-actor.object.rotation)/self.time
-            self.started = True
         actor.object.rotate(dt*self.alpha)
         super(RotateTo, self).update(actor, game, dt)
 
@@ -248,11 +275,13 @@ class Animate(TimedAction):
             self.frame_times.append(c_time)
         super(Animate, self).__init__(time)
     
+    def on_assign(self, actor):
+        image = actor.object.image
+        self.frame_width = image.width//self.num_cols
+        self.frame_height = image.height//self.num_rows
+    
     def update(self, actor, game, dt):
         sprite = actor.object
-        if self.frame_width is None:
-            self.frame_width = sprite.image.width//self.num_cols
-            self.frame_height = sprite.image.height//self.num_rows
         time0 = self.clock.total_time
         if time0 > self.time:
             self.count += 1
