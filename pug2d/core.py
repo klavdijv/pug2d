@@ -159,8 +159,9 @@ class Game(object):
             self._level.draw(self.window)
             if self.show_fps:
                 self.window.view = self.window.default_view
+                ft = self.window.frame_time
                 try:
-                    self.fps_text.string = '%.2f' % (1.0/self.window.frame_time)
+                    self.fps_text.string = '{:7.2f}'.format(1.0/ft)
                 except ZeroDivisionError:
                     pass
                 self.window.draw(self.fps_text)
