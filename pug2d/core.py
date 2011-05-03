@@ -12,10 +12,9 @@ class GameClock(object):
         self._init()
     
     def _init(self):
-        self.old_time = 0.0
-        self.accum_time = 0.0
         self._paused = False
-        self.pause_time = 0.0
+        self._total_time = 0.0
+        self.time_factor = 1.0
     
     def reset(self):
         self.clock.reset()
@@ -27,11 +26,9 @@ class GameClock(object):
     def set_paused(self, value):
         if self._paused == value:
             return
-        dt = self.clock.elapsed_time
         if value:
-            self.pause_time = dt
-        else:
-            self.accum_time += self.clock.elapsed_time - self.pause_time
+            self._total_time += self.time_factor*self.clock.elapsed_time
+        self.clock.reset()
         self._paused = value
     
     paused = property(get_paused, set_paused)
@@ -39,16 +36,14 @@ class GameClock(object):
     @property
     def total_time(self):
         if self._paused:
-            return self.pause_time
-        return self.clock.elapsed_time-self.accum_time
+            return self._total_time
+        return self._total_time+self.time_factor*self.clock.elapsed_time
     
     @property
     def elapsed_time(self):
-        new_time = self.clock.elapsed_time
-        dt = new_time-self.old_time
-        self.old_time = new_time
-        if self._paused:
-            return 0.0
+        dt = 0.0 if self._paused else self.time_factor*self.clock.elapsed_time
+        self.clock.reset()
+        self._total_time += dt
         return dt
 
 
