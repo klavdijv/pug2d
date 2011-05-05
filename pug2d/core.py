@@ -214,11 +214,17 @@ class Actor(object):
         self.object = sf_obj
         self.killed = False
         self.actions = []
+        self._animation = None
     
     def update(self, game, dt):
+        if self._animation:
+            self._animation.pause(dt == 0)
+            self._animation.do_update(self, game, dt)
+            
         for action in self.actions:
             action.pause(dt == 0)
             action.do_update(self, game, dt)
+        
         self.actions = [act for act in self.actions if not act.finished]
     
     def draw(self, window):
@@ -238,6 +244,15 @@ class Actor(object):
     def replace_action(self, old_action, new_action):
         self.actions.remove(old_action)
         self.actions.append(new_action)
+    
+    def get_animation(self):
+        return self._animation
+    
+    def set_animation(self, animation):
+        animation.on_assign(self)
+        self._animation = animation
+    
+    animation = property(get_animation, set_animation)
 
 
 class Camera(Actor):

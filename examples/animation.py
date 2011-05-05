@@ -6,6 +6,22 @@ Created on 24. apr. 2011
 
 from pug2d import core, actions
 import sf
+import random
+
+class SwitchAnimation(actions.TimedAction):
+    def __init__(self):
+        super(SwitchAnimation, self).__init__(0.0)
+        self.next_check = 1.0+0.1*random.randrange(25)
+
+    def update(self, actor, game, dt):
+        if self.clock.total_time > self.next_check:
+            r = random.random()
+            if r < 0.2:
+                actor.animation.stop()
+            elif r > 0.5:
+                actor.animation.resume()
+            self.next_check = self.clock.total_time+1.0+random.random()
+        
 
 class Level1(core.Level):
 
@@ -24,7 +40,8 @@ class Level1(core.Level):
                                        start=(num % 4, 0),
                                        stop=(num % 4, 7),
                                        repeats=0)
-                act.add_action(anim)
+                act.animation = anim
+                act.add_action(SwitchAnimation())
                 layer.add_actor(act)
                 num += 1
 
