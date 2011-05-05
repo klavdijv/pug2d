@@ -295,3 +295,20 @@ class Animate(TimedAction):
         sprite.sub_rect = sf.IntRect(col*self.frame_width,
                                      row*self.frame_height,
                                      self.frame_width, self.frame_height)
+
+
+# Camera actions
+
+class CameraFollow(Action):
+    
+    def __init__(self, target, follow_rotation):
+        super(CameraFollow, self).__init__()
+        self.target = target
+        self.follow_rotation = follow_rotation
+    
+    def update(self, actor, game, dt):
+        camera = actor.object
+        sprite = self.target.object
+        camera.center = sprite.position
+        if self.follow_rotation:
+            camera.rotation = sprite.rotation
