@@ -209,12 +209,33 @@ class Layer(object):
         self.actors.remove(actor)
 
 
+class OffscreenLayer(Layer):
+# WARNING: doesn't work on all platforms and hardware
+# (Intel graphics cards on Linux, for example)
+    def __init__(self, width, height):
+        super(OffscreenLayer, self).__init__()
+        self.window = sf.RenderImage(width, height)
+        sprite = sf.Sprite()
+        sprite.position = (0, 0)
+        self.container = Actor(sprite)
+    
+    def draw(self, window):
+        offscreen = self.window
+        offscreen.clear(sf.Color(0, 0, 0, 0))
+        super(OffscreenLayer, self).draw(offscreen)
+        offscreen.display()
+        container = self.container.object
+        container.image = offscreen.image
+        window.draw(container, self.container.shader)
+
+
 class Actor(object):
     def __init__(self, sf_obj):
         self.object = sf_obj
         self.killed = False
         self.actions = []
         self._animation = None
+        self.shader = None
     
     def update(self, game, dt):
         if self._animation:
@@ -228,7 +249,7 @@ class Actor(object):
         self.actions = [act for act in self.actions if not act.finished]
     
     def draw(self, window):
-        window.draw(self.object)
+        window.draw(self.object, self.shader)
     
     def kill(self):
         self.killed = True

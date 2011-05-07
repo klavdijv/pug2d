@@ -22,7 +22,13 @@ class Level1(core.Level):
 
     def __init__(self):
         super(Level1, self).__init__()
-        layer = core.Layer()
+        layer = core.OffscreenLayer(800, 600)
+        layer.container.object.position = (100, 100)
+        
+        shader = sf.Shader.load_from_file('edge.sfx')
+        shader.set_texture('texture', layer.window.image)
+        layer.container.shader = shader
+
         self.add_layer(layer)
         self.im0 = sf.Image.load_from_file('princess.png')
         for x in xrange(50, 600, 50):
