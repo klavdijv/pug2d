@@ -12,10 +12,9 @@ class GameClock(object):
         self._init()
     
     def _init(self):
-        self.old_time = 0.0
-        self.accum_time = 0.0
         self._paused = False
-        self.pause_time = 0.0
+        self._total_time = 0.0
+        self.time_factor = 1.0
     
     def reset(self):
         self.clock.reset()
@@ -27,11 +26,9 @@ class GameClock(object):
     def set_paused(self, value):
         if self._paused == value:
             return
-        dt = self.clock.elapsed_time
         if value:
-            self.pause_time = dt
-        else:
-            self.accum_time += self.clock.elapsed_time - self.pause_time
+            self._total_time += self.time_factor*self.clock.elapsed_time
+        self.clock.reset()
         self._paused = value
     
     paused = property(get_paused, set_paused)
@@ -39,16 +36,14 @@ class GameClock(object):
     @property
     def total_time(self):
         if self._paused:
-            return self.pause_time
-        return self.clock.elapsed_time-self.accum_time
+            return self._total_time
+        return self._total_time+self.time_factor*self.clock.elapsed_time
     
     @property
     def elapsed_time(self):
-        new_time = self.clock.elapsed_time
-        dt = new_time-self.old_time
-        self.old_time = new_time
-        if self._paused:
-            return 0.0
+        dt = 0.0 if self._paused else self.time_factor*self.clock.elapsed_time
+        self.clock.reset()
+        self._total_time += dt
         return dt
 
 
@@ -214,24 +209,38 @@ class Layer(object):
         self.actors.remove(actor)
 
 
-class Actor(object):
+class OffscreenLayer(Layer):
+# WARNING: doesn't work on all platforms and hardware
+# (Intel graphics cards on Linux, for example)
+    def __init__(self, width, height):
+        super(OffscreenLayer, self).__init__()
+        self.window = sf.RenderImage(width, height)
+        sprite = sf.Sprite()
+        sprite.position = (0, 0)
+        self.container = Actor(sprite)
+    
+    def draw(self, window):
+        offscreen = self.window
+        offscreen.clear(sf.Color(0, 0, 0, 0))
+        super(OffscreenLayer, self).draw(offscreen)
+        offscreen.display()
+        container = self.container.object
+        container.image = offscreen.image
+        window.draw(container, self.container.shader)
+
+
+class BaseActor(object):
     def __init__(self, sf_obj):
         self.object = sf_obj
         self.killed = False
         self.actions = []
     
     def update(self, game, dt):
-        for action in self.actions:
-            action.pause(dt == 0)
-            action.do_update(self, game, dt)
-        self.actions = [act for act in self.actions if not act.finished]
+        pass
     
     def draw(self, window):
-        window.draw(self.object)
+        pass
     
-    def kill(self):
-        self.killed = True
-
     def add_action(self, action):
         self.actions.append(action)
         action.on_assign(self)
@@ -243,11 +252,43 @@ class Actor(object):
     def replace_action(self, old_action, new_action):
         self.actions.remove(old_action)
         self.actions.append(new_action)
-
-
-class Camera(Actor):
-    def draw(self, window):
-        pass
     
     def kill(self):
         pass
+    
+
+class Actor(BaseActor):
+    def __init__(self, sf_obj, shader=None):
+        super(Actor, self).__init__(sf_obj)
+        self._animation = None
+        self.shader = None
+    
+    def update(self, game, dt):
+        if self._animation:
+            self._animation.pause(dt == 0)
+            self._animation.do_update(self, game, dt)
+            
+        for action in self.actions:
+            action.pause(dt == 0)
+            action.do_update(self, game, dt)
+        
+        self.actions = [act for act in self.actions if not act.finished]
+    
+    def draw(self, window):
+        window.draw(self.object, self.shader)
+    
+    def kill(self):
+        self.killed = True
+
+    def get_animation(self):
+        return self._animation
+    
+    def set_animation(self, animation):
+        animation.on_assign(self)
+        self._animation = animation
+    
+    animation = property(get_animation, set_animation)
+
+
+class Camera(BaseActor):
+    pass

@@ -49,7 +49,7 @@ class TimedAction(Action):
         if self.finished:
             return
         super(TimedAction, self).update(actor, game, dt)
-        if self.clock.total_time > self.time:
+        if self.time > 0.0 and self.clock.total_time > self.time:
             self.finished = True
     
     def reset(self):
@@ -274,6 +274,7 @@ class Animate(TimedAction):
             c_time += ft
             self.frame_times.append(c_time)
         super(Animate, self).__init__(time)
+        self.old_time_factor = self.clock.time_factor
     
     def on_assign(self, actor):
         image = actor.object.image
@@ -295,3 +296,26 @@ class Animate(TimedAction):
         sprite.sub_rect = sf.IntRect(col*self.frame_width,
                                      row*self.frame_height,
                                      self.frame_width, self.frame_height)
+    def stop(self):
+        self.old_time_factor = self.clock.time_factor
+        self.clock.time_factor = 0.0
+    
+    def resume(self):
+        self.clock.time_factor = self.old_time_factor
+
+
+# Camera actions
+
+class CameraFollow(Action):
+    
+    def __init__(self, target, follow_rotation):
+        super(CameraFollow, self).__init__()
+        self.target = target
+        self.follow_rotation = follow_rotation
+    
+    def update(self, actor, game, dt):
+        camera = actor.object
+        sprite = self.target.object
+        camera.center = sprite.position
+        if self.follow_rotation:
+            camera.rotation = sprite.rotation
