@@ -16,13 +16,11 @@ class ShapePoint(object):
 
 class Shape(Actor):
     
-
     def append(self, p0):
         self.object.add_point(p0.x, p0.y, p0.color, p0.outline_color)
     
-    
-    def __init__(self, p_list=None):
-        super(Shape, self).__init__(sf.Shape())
+    def __init__(self, p_list=None, shader=None):
+        super(Shape, self).__init__(sf.Shape(), shader=shader)
         if p_list is not None:
             for p0 in p_list:
                 self.append(p0)

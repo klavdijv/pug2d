@@ -229,11 +229,37 @@ class OffscreenLayer(Layer):
         window.draw(container, self.container.shader)
 
 
-class Actor(object):
+class BaseActor(object):
     def __init__(self, sf_obj):
         self.object = sf_obj
         self.killed = False
         self.actions = []
+    
+    def update(self, game, dt):
+        pass
+    
+    def draw(self, window):
+        pass
+    
+    def add_action(self, action):
+        self.actions.append(action)
+        action.on_assign(self)
+
+    def remove_action(self, action):
+        self.actions.remove(action)
+        action.on_remove(self)
+    
+    def replace_action(self, old_action, new_action):
+        self.actions.remove(old_action)
+        self.actions.append(new_action)
+    
+    def kill(self):
+        pass
+    
+
+class Actor(BaseActor):
+    def __init__(self, sf_obj, shader=None):
+        super(Actor, self).__init__(sf_obj)
         self._animation = None
         self.shader = None
     
@@ -254,18 +280,6 @@ class Actor(object):
     def kill(self):
         self.killed = True
 
-    def add_action(self, action):
-        self.actions.append(action)
-        action.on_assign(self)
-
-    def remove_action(self, action):
-        self.actions.remove(action)
-        action.on_remove(self)
-    
-    def replace_action(self, old_action, new_action):
-        self.actions.remove(old_action)
-        self.actions.append(new_action)
-    
     def get_animation(self):
         return self._animation
     
@@ -276,9 +290,5 @@ class Actor(object):
     animation = property(get_animation, set_animation)
 
 
-class Camera(Actor):
-    def draw(self, window):
-        pass
-    
-    def kill(self):
-        pass
+class Camera(BaseActor):
+    pass
