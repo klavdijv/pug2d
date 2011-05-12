@@ -234,6 +234,17 @@ class BaseActor(object):
         self.object = sf_obj
         self.killed = False
         self.actions = []
+        self._actions_d = {}
+    
+    def __getitem__(self, name):
+        return self._actions_d[name]
+    
+    def __setitem__(self, name, action):
+        self.remove_action(name)
+        self.add_action(action, name)
+        
+    def __delitem__(self, name):
+        self.remove_action(name)
     
     def update(self, game, dt):
         pass
@@ -241,12 +252,22 @@ class BaseActor(object):
     def draw(self, window):
         pass
     
-    def add_action(self, action):
+    def add_action(self, action, name=''):
         self.actions.append(action)
+        if name:
+            self._actions_d[name] = action
+            action.name = name
         action.on_assign(self)
 
     def remove_action(self, action):
+        if isinstance(action, basestring):
+            try:
+                action = self._actions_d[action]
+            except KeyError:
+                return
         self.actions.remove(action)
+        if action.name:
+            del self._actions_d[action.name]
         action.on_remove(self)
     
     def replace_action(self, old_action, new_action):
@@ -260,14 +281,9 @@ class BaseActor(object):
 class Actor(BaseActor):
     def __init__(self, sf_obj, shader=None):
         super(Actor, self).__init__(sf_obj)
-        self._animation = None
         self.shader = None
     
-    def update(self, game, dt):
-        if self._animation:
-            self._animation.pause(dt == 0)
-            self._animation.do_update(self, game, dt)
-            
+    def update(self, game, dt):            
         for action in self.actions:
             action.pause(dt == 0)
             action.do_update(self, game, dt)
@@ -279,15 +295,6 @@ class Actor(BaseActor):
     
     def kill(self):
         self.killed = True
-
-    def get_animation(self):
-        return self._animation
-    
-    def set_animation(self, animation):
-        animation.on_assign(self)
-        self._animation = animation
-    
-    animation = property(get_animation, set_animation)
 
 
 class Camera(BaseActor):

@@ -17,9 +17,9 @@ class SwitchAnimation(actions.TimedAction):
         if self.clock.total_time > self.next_check:
             r = random.random()
             if r < 0.2:
-                actor.animation.stop()
+                actor['walk'].stop()
             elif r > 0.5:
-                actor.animation.resume()
+                actor['walk'].resume()
             self.next_check = self.clock.total_time+1.0+random.random()
         
 
@@ -40,7 +40,7 @@ class Level1(core.Level):
                                        start=(num % 4, 0),
                                        stop=(num % 4, 7),
                                        repeats=0)
-                act.animation = anim
+                act['walk'] = anim
                 act.add_action(SwitchAnimation())
                 layer.add_actor(act)
                 num += 1
