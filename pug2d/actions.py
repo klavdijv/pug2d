@@ -7,6 +7,7 @@ class Action(object):
     def __init__(self):
         self.started  = False
         self.finished = False
+        self.name = ''
     
     def on_assign(self, actor):
         pass
