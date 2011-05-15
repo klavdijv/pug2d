@@ -6,7 +6,6 @@ Created on 24. apr. 2011
 import sf
 
 class GameClock(object):
-    
     def __init__(self):
         self.clock = sf.Clock()
         self._init()
@@ -71,7 +70,7 @@ class Level(object):
     
     def remove_layer(self, layer):
         self.layers.remove(layer)
-        
+    
 
 class Game(object):
     

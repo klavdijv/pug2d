@@ -12,10 +12,10 @@ class Action(object):
     def on_assign(self, actor):
         pass
     
-    def on_start(self, actor):
+    def on_start(self, actor, game):
         pass
     
-    def on_end(self, actor):
+    def on_end(self, actor, game):
         pass
     
     def finish(self):
@@ -26,11 +26,11 @@ class Action(object):
     
     def do_update(self, actor, game, dt):
         if not self.started:
-            self.on_start(actor)
+            self.on_start(actor, game)
             self.started = True
         self.update(actor, game, dt)
         if self.finished:
-            self.on_end(actor)
+            self.on_end(actor, game)
     
     def reset(self):
         self.finished = False
@@ -210,7 +210,7 @@ class MoveTo(TimedAction):
         self.dx = x
         self.dy = y
     
-    def on_start(self, actor):
+    def on_start(self, actor, game):
         self.dx = (self.dx - actor.object.x)/self.time
         self.dy = (self.dy - actor.object.y)/self.time
     
@@ -235,7 +235,7 @@ class RotateTo(TimedAction):
         super(RotateTo, self).__init__(time)
         self.alpha = alpha
     
-    def on_start(self, actor):
+    def on_start(self, actor, game):
         self.alpha = (self.alpha-actor.object.rotation)/self.time
     
     def update(self, actor, game, dt):
