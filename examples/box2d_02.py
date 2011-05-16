@@ -9,7 +9,7 @@ import random
 class Move(actions.TimedAction):
     def __init__(self, time):
         super(Move, self).__init__(time)
-        self.fv = b2.vec2(random.randrange(-15, 15), random.randrange(-15, 15))
+        self.fv = b2.vec2(random.randrange(-45, 45), random.randrange(-45, 45))
     
     def update(self, actor, game, dt):
         if self.finished:

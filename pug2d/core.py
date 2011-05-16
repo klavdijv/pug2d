@@ -245,8 +245,12 @@ class BaseActor(object):
     def __delitem__(self, name):
         self.remove_action(name)
     
-    def update(self, game, dt):
-        pass
+    def update(self, game, dt):            
+        for action in self.actions:
+            action.pause(dt == 0)
+            action.do_update(self, game, dt)
+        
+        self.actions = [act for act in self.actions if not act.finished]
     
     def draw(self, window):
         pass
@@ -281,13 +285,6 @@ class Actor(BaseActor):
     def __init__(self, sf_obj, shader=None):
         super(Actor, self).__init__(sf_obj)
         self.shader = None
-    
-    def update(self, game, dt):            
-        for action in self.actions:
-            action.pause(dt == 0)
-            action.do_update(self, game, dt)
-        
-        self.actions = [act for act in self.actions if not act.finished]
     
     def draw(self, window):
         window.draw(self.object, self.shader)

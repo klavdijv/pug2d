@@ -4,24 +4,6 @@ import core, actions
 import math
 import Box2D
 
-class DefaultContactListener(Box2D.b2ContactListener):
-    def __init__(self, level):
-        super(DefaultContactListener, self).__init__()
-        self.level = level
-    
-    def BeginContact(self, contact):
-        self.level.begin_contact(contact)
-    
-    def EndContact(self, contact):
-        self.level.end_contact(contact)
-    
-    def PreSolve(self, contact, old_manifold):
-        self.level.pre_solve(contact, old_manifold)
-    
-    def PostSolve(self, contact, impulse):
-        self.level.post_solve(contact, impulse)
-
-
 class Box2DLevel(core.Level):
     TIMESTEP = 1.0/60.0
     VEL_ITERS = 8
@@ -31,8 +13,6 @@ class Box2DLevel(core.Level):
     def __init__(self, world):
         super(Box2DLevel, self).__init__()
         self.world = world
-#        self.world.contactListener = DefaultContactListener(self)
-        self.contacts = []
     
     def update(self, game, dt):
         world = self.world
@@ -41,7 +21,6 @@ class Box2DLevel(core.Level):
         else:
             # Game is paused
             time_step = 0.0
-        self.contacts = []
         world.Step(time_step, self.VEL_ITERS, self.POS_ITERS)
         world.ClearForces()
         
@@ -58,33 +37,6 @@ class Box2DLevel(core.Level):
     def on_collision(self, actor_a, actor_b, points, normal):
         pass
     
-    # ContactListener callbacks
-    
-    def begin_contact(self, contact):
-        pass
-    
-    def end_contact(self, contact):
-        pass
-    
-    def pre_solve(self, contact, old_manifold):
-        manifold = contact.manifold
-        if manifold.pointCount == 0:
-            return
-        
-        state1, state2 = Box2D.b2GetPointStates(old_manifold, manifold)
-        if not state2:
-            return
-        world_manifold = contact.worldManifold
-        for i, point in enumerate(state2):
-            self.contacts.append({'actorA': contact.fixtureA.body.userData,
-                                  'actorB': contact.fixtureB.body.userData,
-                                  'position': world_manifold.points[i],
-                                  'normal': world_manifold.normal,
-                                  'state': state2[i]})
-    
-    def post_solve(self, contact, impulse):
-        pass
-
 
 class Updater(actions.Action):
     
@@ -101,7 +53,6 @@ class Updater(actions.Action):
     def convert_coords(self, game, pos):
         PPM = game.level.PPM
         x0 = PPM*pos[0]
-#        y0 = PPM*pos[1]
         y0 = game.window.height-(PPM*pos[1])
         return x0, y0
     
@@ -111,6 +62,7 @@ class Updater(actions.Action):
                 self.body.userData = None
                 self.on_remove(actor, game)
             return
+        
         sf_obj = actor.object
         body = self.body
         sf_obj.position = self.convert_coords(game, body.position)
