@@ -54,11 +54,11 @@ class Level1(Box2DLevel):
         self.im0 = sf.Image.load_from_file('princess.png')
         for y in range(0, 500, 120):
             for x in range(200, 700, 120):
-                x0, y0 = x/self.PPM, y/self.PPM+5.0
                 sprite = sf.Sprite(self.im0)
                 sprite.origin = (self.im0.width//2, self.im0.height//2)
+                sprite.position = (x, y)
                 actor = core.Actor(sprite)
-                body = world.CreateDynamicBody(position=(x0, y0),
+                body = world.CreateDynamicBody(linearDamping=0.25,
                                                angularDamping=0.1)
                 body.CreateCircleFixture(radius=2.5, density=1.0, friction=0.3)
                 actor.add_action(Updater(body), name='box2d')
@@ -66,7 +66,9 @@ class Level1(Box2DLevel):
                 actor.add_action(act2)
                 layer.add_actor(actor)
     
-    def on_collision(self, actor_a, actor_b, points, normal):
+    def on_collision(self, fixture_a, fixture_b, points, normal):
+        actor_a = fixture_a.body.userData
+        actor_b = fixture_b.body.userData
         if actor_a:
             actor_a.add_action(Colorize(1.0, sf.Color.RED), name='mark_col')
         if actor_b:

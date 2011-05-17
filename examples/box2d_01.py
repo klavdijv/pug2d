@@ -21,11 +21,11 @@ class Level1(Box2DLevel):
         self.im0 = sf.Image.load_from_file('princess.png')
         for y in range(0, 500, 120):
             for x in range(200, 700, 120):
-                x0, y0 = x/self.PPM, y/self.PPM+20.0
                 sprite = sf.Sprite(self.im0)
                 sprite.origin = (self.im0.width//2, self.im0.height//2)
+                sprite.position = (x, y)
                 actor = core.Actor(sprite)
-                body = world.CreateDynamicBody(position=(x0, y0))
+                body = world.CreateDynamicBody()
                 body.CreateCircleFixture(radius=2.5, density=1.0, friction=0.3)
                 actor.add_action(Updater(body), name='box2d')
                 layer.add_actor(actor)
