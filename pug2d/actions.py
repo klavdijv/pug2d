@@ -177,6 +177,19 @@ class Kill(Action):
         self.finished = True
 
 
+class Call(Action):
+    def __init__(self, func, *args, **kws):
+        super(Call, self).__init__()
+        self.func = func
+        self.args = args
+        self.kws = kws
+    
+    def update(self, actor, game, dt):
+        super(Call, self).update(actor, game, dt)
+        self.func(actor, *self.args, **self.kws)
+        self.finished = True
+        
+
 class DefferedCall(TimedAction):
     
     def __init__(self, time, func, *args, **kws):
