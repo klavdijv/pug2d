@@ -81,6 +81,7 @@ class Updater(actions.Action):
     
     def on_assign(self, actor):
         self.body.userData = actor
+        actor.body = self.body
     
     def on_start(self, actor, game):
         body = self.body
@@ -113,4 +114,53 @@ class Updater(actions.Action):
         sf_obj.rotation = math.degrees(body.angle)
     
     def on_remove(self, actor, game):
+        del actor.body
         game.world.DestroyBody(self.body)
+
+
+# Utilities
+
+def can_see(actor1, actor2, max_dist, view_angle):
+    class RayCastCallb(Box2D.b2RayCastCallback):
+        def __init__(self, target, **kwargs):
+            super(RayCastCallb, self).__init__()
+            self.target = target
+            self.actor = None
+        
+        def ReportFixture(self, fixture, point, normal, fraction):
+            actor = fixture.body.userData
+            if getattr(actor, 'obstacle', False) or actor is self.target:
+                self.actor = fixture.body.userData
+                return fraction
+            return -1
+
+
+    if hasattr(actor1, 'body') and hasattr(actor2, 'body'):
+        dv = actor2.body.position-actor1.body.position
+        # Is actor2 within view distance
+        if max_dist < dv.length:
+            return False
+        
+        # Is actor2 inside view_angle?
+        angle = math.atan2(dv.y, dv.x)
+        view_angle_r_h = 0.5*math.radians(view_angle)
+        pi2 = 2*math.pi
+        actor_angle = actor1.body.angle
+        min_angle = actor_angle-view_angle_r_h
+        max_angle = actor_angle+view_angle_r_h
+        if max_angle > pi2:
+            min_angle -= pi2
+            max_angle -= pi2
+        if angle < min_angle:
+            angle += pi2
+        if angle > max_angle:
+            angle -= pi2
+        if not min_angle <= angle <= max_angle:
+            return False
+        
+        callb = RayCastCallb(actor2)
+        actor1.body.world.RayCast(callb,
+                                  actor1.body.position,
+                                  actor2.body.position)
+        return callb.actor is actor2
+    return True
