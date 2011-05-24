@@ -26,7 +26,7 @@ class GameClock(object):
         if self._paused == value:
             return
         if value:
-            self._total_time += self.time_factor*self.clock.elapsed_time
+            self._total_time += 0.001*self.time_factor*self.clock.elapsed_time
         self.clock.reset()
         self._paused = value
     
@@ -36,11 +36,15 @@ class GameClock(object):
     def total_time(self):
         if self._paused:
             return self._total_time
-        return self._total_time+self.time_factor*self.clock.elapsed_time
+        # clock.elapsed_time is milliseconds, convert to seconds
+        dt = 0.001*self.clock.elapsed_time
+        return self._total_time+dt*self.time_factor
     
     @property
     def elapsed_time(self):
         dt = 0.0 if self._paused else self.time_factor*self.clock.elapsed_time
+        # Convert miliseconds to seconds
+        dt *= 0.001
         self.clock.reset()
         self._total_time += dt
         return dt
@@ -154,7 +158,7 @@ class Game(object):
             if self.show_fps:
                 self.window.view = self.window.default_view
                 try:
-                    fps = (1.0/self.window.frame_time)
+                    fps = (1000.0/self.window.frame_time)
                     self.fps_text.string = '{:7.2f}'.format(fps) 
                 except ZeroDivisionError:
                     pass
