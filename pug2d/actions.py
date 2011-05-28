@@ -3,6 +3,7 @@ import bisect
 from .core import GameClock
 
 class Action(object):
+    _id_ = ''
     
     def __init__(self):
         self.started  = False
@@ -37,6 +38,10 @@ class Action(object):
     
     def pause(self, value):
         pass
+    
+    @property
+    def id(self):
+        return self.__class__.__name__ or self._id_
 
 
 class TimedAction(Action):

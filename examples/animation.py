@@ -43,6 +43,7 @@ class Level1(core.Level):
                 act['walk'] = anim
                 act.add_action(SwitchAnimation())
                 layer.add_actor(act)
+                print act.action_ids
                 num += 1
 
 

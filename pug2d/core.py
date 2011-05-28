@@ -238,6 +238,7 @@ class BaseActor(object):
         self.killed = False
         self.actions = []
         self._actions_d = {}
+        self.action_ids = []
     
     def __getitem__(self, name):
         return self._actions_d[name]
@@ -264,6 +265,7 @@ class BaseActor(object):
         if name:
             self._actions_d[name] = action
             action.name = name
+        self.action_ids.append(action.id)
         action.on_assign(self)
 
     def remove_action(self, action):
@@ -275,6 +277,7 @@ class BaseActor(object):
         self.actions.remove(action)
         if action.name:
             del self._actions_d[action.name]
+        self.action_ids.remove(action.id)
         action.on_remove(self)
     
     def replace_action(self, old_action, new_action):
@@ -283,6 +286,9 @@ class BaseActor(object):
     
     def kill(self):
         pass
+    
+    def has_action(self, action_id):
+        return action_id in self.action_ids
     
 
 class Actor(BaseActor):

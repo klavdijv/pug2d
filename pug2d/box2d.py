@@ -74,6 +74,7 @@ class Box2DLevel(core.Level):
 
 
 class Updater(actions.Action):
+    _id_ = 'Box2D'
     
     def __init__(self, body):
         super(Updater, self).__init__()
