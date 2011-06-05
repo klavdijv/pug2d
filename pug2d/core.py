@@ -4,6 +4,7 @@ Created on 24. apr. 2011
 @author: klavdij
 '''
 import sf
+from support import AttrDict
 
 class GameClock(object):
     def __init__(self):
@@ -232,6 +233,51 @@ class OffscreenLayer(Layer):
         window.draw(container, self.container.shader)
 
 
+class Behavior(object):
+    def __init__(self, name, action_cls, *args, **kws):
+        self.name = name
+        self.action_cls = action_cls
+        self.args = args
+        self.kws = kws
+    
+    def __call__(self):
+        return self.action_cls(*self.args, **self.kws)
+    
+
+def add_behavior(name, action_cls):
+    '''
+    Class decorator to add behaviors to Actors. Needs Python 2.6 or newer
+    @param name: unique name of behavior
+    @type name: string
+    @param action_cls: Action subclass implementing desired behavior
+    @type action_cls: Action subclass
+    '''
+    def _wrapper(actor_cls):
+        orig_init = actor_cls.__init__
+        def __init__(self, *args, **kws):
+            co_obj = action_cls.__init__.im_func.func_code
+            act_args = co_obj.co_varnames[1:co_obj.co_argcount]
+            b_args = []
+            for arg in act_args:
+                b_arg = name+'_'+arg
+                if b_arg in kws:
+                    b_args.append(kws.pop(b_arg))
+            orig_init(self, *args, **kws)
+            self.b[name] = action_cls(*b_args)
+        
+        __init__.__doc__ = orig_init.__doc__
+        actor_cls.__init__ = __init__
+        return actor_cls
+    
+    return _wrapper
+
+def create_actor_w_behaviors(actor_cls_name, actor_base_cls, **behaviors):
+    actor_cls = type(actor_cls_name, (actor_base_cls,), {})
+    for (b_name, b_act) in behaviors.items():
+        actor_cls = add_behavior(b_name, b_act)(actor_cls)
+    return actor_cls
+
+
 class BaseActor(object):
     def __init__(self, sf_obj):
         self.object = sf_obj
@@ -239,6 +285,7 @@ class BaseActor(object):
         self.actions = []
         self._actions_d = {}
         self.action_ids = []
+        self.b = self.behaviors = AttrDict()
     
     def __getitem__(self, name):
         return self._actions_d[name]
@@ -250,10 +297,13 @@ class BaseActor(object):
     def __delitem__(self, name):
         self.remove_action(name)
     
-    def update(self, game, dt):            
-        for action in self.actions:
-            action.pause(dt == 0)
-            action.do_update(self, game, dt)
+    def _do_action(self, action, game, dt):
+        action.pause(dt == 0)
+        action.do_update(self, game, dt)
+    
+    def update(self, game, dt):
+        for action in self.b.values()+self.actions:
+            self._do_action(action, game, dt)
         
         self.actions = [act for act in self.actions if not act.finished]
     

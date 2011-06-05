@@ -5,6 +5,15 @@ from pug2d.box2d import Box2DLevel, Updater
 from Box2D import b2
 import sf
 
+# Needs Python >= 2.6
+#@core.add_behavior('box2d', Updater)
+#class Box2DActor(core.Actor):
+#    pass
+
+# Python 2.5 compatible
+Box2DActor = core.create_actor_w_behaviors('Box2DActor', core.Actor,
+                                           box2d=Updater)
+
 class Level1(Box2DLevel):
     PPM = 20
     
@@ -24,10 +33,10 @@ class Level1(Box2DLevel):
                 sprite = sf.Sprite(self.im0)
                 sprite.origin = (self.im0.width//2, self.im0.height//2)
                 sprite.position = (x, y)
-                actor = core.Actor(sprite)
                 body = world.CreateDynamicBody()
                 body.CreateCircleFixture(radius=2.5, density=1.0, friction=0.3)
-                actor.add_action(Updater(body), name='box2d')
+                actor = Box2DActor(sprite, box2d_body=body)
+#                actor.add_action(Updater(body), name='box2d')
                 layer.add_actor(actor)
 
 
