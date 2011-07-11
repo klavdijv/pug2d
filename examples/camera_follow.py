@@ -17,15 +17,14 @@ class Mover(actions.Action):
         self.speed = speed
         
     def update(self, actor, game, dt):
-        input = game.get_input()
         sprite = actor.object
-        if input.is_key_down(sf.Key.LEFT):
+        if sf.Keyboard.is_key_pressed(sf.Keyboard.LEFT):
             sprite.rotate(-90.0*dt)
-        elif input.is_key_down(sf.Key.RIGHT):
+        elif sf.Keyboard.is_key_pressed(sf.Keyboard.RIGHT):
             sprite.rotate(90.0*dt)
-        if input.is_key_down(sf.Key.UP):
+        if sf.Keyboard.is_key_pressed(sf.Keyboard.UP):
             dx, dy = rotate(dt*self.speed, actor.object.rotation)
-        elif input.is_key_down(sf.Key.DOWN):
+        elif sf.Keyboard.is_key_pressed(sf.Keyboard.DOWN):
             dx, dy = rotate(-dt*self.speed, actor.object.rotation)
         else:
             dx, dy = (0.0, 0.0)

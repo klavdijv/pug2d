@@ -142,13 +142,13 @@ class Game(object):
                 if event.type == sf.Event.CLOSED:
                     self._running = False
                 if event.type == sf.Event.KEY_RELEASED:
-                    if event.code == sf.Key.ESCAPE:
+                    if event.code == sf.Keyboard.ESCAPE:
                         self._running = False
-                    if event.code == sf.Key.F and event.control:
+                    if event.code == sf.Keyboard.F and event.control:
                         self.set_fullscreen(not self.fullscreen)
-                    if event.code == sf.Key.X and event.control:
+                    if event.code == sf.Keyboard.X and event.control:
                         self.show_fps = not self.show_fps
-                    if event.code == sf.Key.P and event.control:
+                    if event.code == sf.Keyboard.P and event.control:
                         self.clock.paused = not self.clock.paused
                 self.events.append(event)
             

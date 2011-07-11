@@ -12,9 +12,9 @@ class Rotate(actions.TimedAction):
         super(Rotate, self).__init__(time)
         self.angle = angle
     
-    def update(self, actor, dt):
+    def update(self, actor, game, dt):
         actor.object.rotate(dt*self.angle)
-        super(Rotate, self).update(actor, dt)
+        super(Rotate, self).update(actor, game, dt)
 
 class Move(actions.TimedAction):
     def __init__(self, time, dx, dy):
@@ -22,9 +22,9 @@ class Move(actions.TimedAction):
         self.dx = dx
         self.dy = dy
     
-    def update(self, actor, dt):
+    def update(self, actor, game, dt):
         actor.object.move(dt*self.dx, dt*self.dy)
-        super(Move, self).update(actor, dt)
+        super(Move, self).update(actor, game, dt)
         
 
 class Level1(core.Level):
