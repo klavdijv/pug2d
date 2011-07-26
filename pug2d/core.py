@@ -55,6 +55,20 @@ class Level(object):
     
     def __init__(self):
         self.layers = []
+        self.update_plugins = []
+        self.draw_plugins = []
+    
+    def add_plugin(self, plugin):
+        if hasattr(plugin, 'update'):
+            self.update_plugins.append(plugin)
+        if hasattr(plugin, 'draw'):
+            self.draw_plugins.append(plugin)
+    
+    def remove_plugin(self, plugin):
+        if hasattr(plugin, 'update'):
+            self.update_plugins.remove(plugin)
+        if hasattr(plugin, 'draw'):
+            self.draw_plugins.remove(plugin)
     
     def on_start(self):
         pass
@@ -65,10 +79,14 @@ class Level(object):
     def update(self, game, dt):
         for layer in self.layers:
             layer.update(game, dt)
+        for plugin in self.update_plugins:
+            plugin.update(self, game, dt)
     
     def draw(self, window):
         for layer in self.layers:
             layer.draw(window)
+        for plugin in self.draw_plugins:
+            plugin.draw(self, window)
     
     def add_layer(self, layer):
         self.layers.append(layer)
