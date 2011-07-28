@@ -55,6 +55,7 @@ class Level(object):
     
     def __init__(self):
         self.layers = []
+        self.game = None
         self.update_plugins = []
         self.draw_plugins = []
     
@@ -90,9 +91,11 @@ class Level(object):
     
     def add_layer(self, layer):
         self.layers.append(layer)
+        layer.level = self
     
     def remove_layer(self, layer):
         self.layers.remove(layer)
+        layer.level = None
     
 
 class Game(object):
@@ -116,6 +119,24 @@ class Game(object):
         self.framerate_limit = framerate_limit
         self.clock = GameClock()
         self.events = []
+    
+    def before_update(self):
+        pass
+    
+    def after_update(self):
+        pass
+    
+    def before_draw(self):
+        pass
+    
+    def after_draw(self):
+        pass
+    
+    def on_loop_begin(self):
+        pass
+    
+    def on_loop_end(self):
+        pass
 
     def _get_videomode(self):
         videomode = sf.VideoMode(self.width, self.height, self.bpp)
@@ -141,9 +162,11 @@ class Game(object):
         if self._level is not None:
             if hasattr(self._level, 'on_end'):
                 self._level.on_end()
+            self._level.game = None
         self._level = level
         if hasattr(level, 'on_start'):
             level.on_start()
+        level.game = self
     
     level = property(get_level, set_level)
     
@@ -155,6 +178,7 @@ class Game(object):
         self._running = True
         self.window.framerate_limit = self.framerate_limit
         while self._running:
+            self.on_loop_begin()
             del self.events[:]
             for event in self.window.iter_events():
                 if event.type == sf.Event.CLOSED:
@@ -171,9 +195,13 @@ class Game(object):
                 self.events.append(event)
             
             dt = self.clock.elapsed_time
+            self.before_update()
             self._level.update(self, dt)
+            self.after_update()
             self.window.clear(self.background_color)
+            self.before_draw()
             self._level.draw(self.window)
+            self.after_draw()
             if self.show_fps:
                 self.window.view = self.window.default_view
                 try:
@@ -183,6 +211,7 @@ class Game(object):
                     pass
                 self.window.draw(self.fps_text)
             self.window.display()
+            self.on_loop_end()
         self.window.close()
     
     def get_default_camera(self):
@@ -199,12 +228,29 @@ class Layer(object):
     def __init__(self):
         self.actors = []
         self.cameras = []
+        self.update_plugins = []
+        self.draw_plugins = []
+        self.level = None
     
     def add_camera(self, camera):
         self.cameras.append(camera)
+        camera.layer = self
     
     def remove_camera(self, camera):
         self.cameras.remove(camera)
+        camera.layer = None
+    
+    def add_plugin(self, plugin):
+        if hasattr(plugin, 'update'):
+            self.update_plugins.append(plugin)
+        if hasattr(plugin, 'draw'):
+            self.draw_plugins.append(plugin)
+    
+    def remove_plugin(self, plugin):
+        if hasattr(plugin, 'update'):
+            self.update_plugins.remove(plugin)
+        if hasattr(plugin, 'draw'):
+            self.draw_plugins.remove(plugin)
     
     def z_order(self):
         pass
@@ -216,6 +262,8 @@ class Layer(object):
             actor.update(game, dt)
         self.actors = [actor for actor in self.actors if not actor.killed]
         self.z_order()
+        for plugin in self.update_plugins:
+            plugin.update(self, game, dt)
     
     def draw(self, window):
         views = [camera.object for camera in self.cameras] or [window.view]
@@ -223,12 +271,16 @@ class Layer(object):
             window.view = view
             for actor in self.actors:
                 actor.draw(window)
+            for plugin in self.draw_plugins:
+                plugin.draw(self, window)
     
     def add_actor(self, actor):
         self.actors.append(actor)
+        actor.layer = self
     
     def remove_actor(self, actor):
         self.actors.remove(actor)
+        actor.layer = None
 
 
 class OffscreenLayer(Layer):
@@ -304,6 +356,7 @@ class BaseActor(object):
         self._actions_d = {}
         self.action_ids = []
         self.b = self.behaviors = AttrDict()
+        self.layer = None
     
     def __getitem__(self, name):
         return self._actions_d[name]
