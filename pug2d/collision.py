@@ -6,7 +6,6 @@ Created on 26. jul. 2011
 
 import Box2D as B2D
 import math
-from pygame.sprite import collide_circle
 
 RAYCAST_FIND_FIRST = 0
 RAYCAST_FIND_ALL = 1
@@ -26,6 +25,15 @@ def _collide_poly(m, actor1, actor2):
     B2D.b2CollidePolygons(m, actor1.shape, actor1.transform,
                           actor2.shape, actor2.transform)
 
+
+class Distance(object):
+    def __init__(self, p1, p2, dist, iters):
+        self.p1 = p1
+        self.p2 = p2
+        self.dist = dist
+        self.iters = iters
+
+
 class CollMixin(object):
     def __init__(self, shape=None):
         self._basic_shape = shape
@@ -36,9 +44,12 @@ class CollMixin(object):
             self._circle_collide = _collide_poly_circle
         elif isinstance(shape, B2D.b2CircleShape):
             self._poly_collide = _collide_circle_poly
-            self._circle_collide = collide_circle
+            self._circle_collide = _collide_circle
         else:
-            raise TypeError(type(shape).__name__)
+            msg = 'Expected b2PolygonShape or b2CircleShape, got %s'
+            raise TypeError(msg % type(shape).__name__)
+        self._old_scale = (1.0, 1.0)
+        self.rescaled_shape = None
     
     def set_transform(self):
         t = self.transform
@@ -58,21 +69,25 @@ class CollMixin(object):
         m = self.collide(other)
         return bool(m.pointCount)
     
-    def rescaled_shape(self):
+    def rescale_shape(self):
         scale = self.object.scale
-        if isinstance(self._basic_shape, B2D.b2PolygonShape):
-            vertices = []
-            c = self._basic_shape.centroid
-            for v in self._basic_shape.vertices:
-                dv = c-B2D.b2Vec2(*v)
-                dv.x *= scale[0]
-                dv.y *= scale[1]
-                vertices.append((c+dv).tuple)
-            return B2D.b2PolygonShape(vertices=vertices)
-        else:
-            c_scale = max(scale[0], scale[1])
-            return B2D.b2CircleShape(pos=self._basic_shape.pos,
-                                     radius=c_scale*self._basic_shape.radius)
+        bs = self._basic_shape
+        if scale != self._old_scale:
+            self._old_scale = scale
+            if isinstance(bs, B2D.b2PolygonShape):
+                vertices = []
+                c = bs.centroid
+                for v in bs.vertices:
+                    dv = c-B2D.b2Vec2(*v)
+                    dv.x *= scale[0]
+                    dv.y *= scale[1]
+                    vertices.append((c+dv).tuple)
+                self.rescaled_shape = B2D.b2PolygonShape(vertices=vertices)
+            else:
+                c_scale = max(scale[0], scale[1])
+                self.rescaled_shape = B2D.b2CircleShape(pos=bs.pos,
+                                                      radius=c_scale*bs.radius)
+        return self.rescaled_shape
     
     def update(self, game, dt):
         super(CollMixin, self).update(game, dt)
@@ -81,10 +96,17 @@ class CollMixin(object):
     def overlaps(self, other):
         return B2D.b2TestOverlap(self.aabb, other.aabb)
     
+    def distance(self, other):
+        dr = B2D.b2Distance(shapeA=self.shape,
+                            shapeB=other.shape,
+                            transformA=self.transform,
+                            transformB=other.transform)
+        return Distance(*dr)
+    
     @property
     def shape(self):
         if self.object.scale != (1.0, 1.0):
-            return self.rescaled_shape()
+            return self.rescale_shape()
         return self._basic_shape
     
     @property
@@ -107,6 +129,8 @@ class CollisionGroup(object):
     def __init__(self, *args):
         self.actors = []
         self.pairs = []
+        self._world_pairs = []
+        self._recalc_world_pairs = True
     
     def add_actor(self, actor):
         self.actors.append(actor)
@@ -125,9 +149,22 @@ class CollisionGroup(object):
                 m = actor1.collide(actor2)
                 if m.pointCount:
                     self.pairs.append((actor1, actor2, m))
+        self._recalc_world_pairs = True
     
     def raycast(self, p1, p2, mode=RAYCAST_FIND_FIRST):
         return raycast(p1, p2, self.actors, mode)
+    
+    @property
+    def world_pairs(self):
+        if self._recalc_world_pairs:
+            pairs = self._world_pairs = []
+            for (a1, a2, m) in self.pairs:
+                wm = B2D.b2WorldManifold()
+                wm.Initialize(m, a1.transform, a1.shape.radius,
+                              a2.transform, a2.shape.radius)
+                pairs.append((a1, a2, wm))
+            self._recalc_world_pairs = False
+        return self._world_pairs
 
 
 def raycast(p1, p2, actors, mode=RAYCAST_FIND_FIRST):

@@ -65,3 +65,8 @@ class Shape(Actor):
         shape.object = sf.Shape.circle(x, y, radius, color,
                                        outline, outline_color)
         return shape
+    
+    @property
+    def vertices(self):
+        obj = self.object
+        return [obj.get_point_coordinates[i] for i in range(obj.points_count)]
