@@ -85,6 +85,11 @@ class Level1(core.Level):
             act = Actor1(self.im0, x, 200)
             layer.add_actor(act)
             coll_group.add_actor(act)
+        coll_group.add_event_handler('collision', self.on_collision)
+    
+    def on_collision(self, actor1, actor2, manifold):
+        print 'Collision happened'
+
 
 def main():
     game = core.Game(800, 600)

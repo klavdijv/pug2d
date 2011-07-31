@@ -6,6 +6,7 @@ Created on 26. jul. 2011
 
 import Box2D as B2D
 import math
+from .events import EventNotifier
 
 RAYCAST_FIND_FIRST = 0
 RAYCAST_FIND_ALL = 1
@@ -125,8 +126,9 @@ class CollMixin(object):
         return new_cls
 
 
-class CollisionGroup(object):
+class CollisionGroup(EventNotifier):
     def __init__(self, *args):
+        super(CollisionGroup, self).__init__()
         self.actors = []
         self.pairs = []
         self._world_pairs = []
@@ -149,6 +151,7 @@ class CollisionGroup(object):
                 m = actor1.collide(actor2)
                 if m.pointCount:
                     self.pairs.append((actor1, actor2, m))
+                    self.raise_event('collision', actor1, actor2, m)
         self._recalc_world_pairs = True
     
     def raycast(self, p1, p2, mode=RAYCAST_FIND_FIRST):
