@@ -5,6 +5,7 @@ Created on 24. apr. 2011
 '''
 import sf
 from support import AttrDict
+from events import EventNotifier
 
 class GameClock(object):
     def __init__(self):
@@ -98,10 +99,11 @@ class Level(object):
         layer.level = None
     
 
-class Game(object):
+class Game(EventNotifier):
     
     def __init__(self, width, height, bpp=32, title='Basic game',
                  framerate_limit=60, fullscreen=False):
+        super(Game, self).__init__()
         self.width = width
         self.height = height
         self.bpp = bpp
@@ -192,6 +194,7 @@ class Game(object):
                         self.show_fps = not self.show_fps
                     if event.code == sf.Keyboard.P and event.control:
                         self.clock.paused = not self.clock.paused
+                self.raise_event(event.type, event)
                 self.events.append(event)
             
             dt = self.clock.elapsed_time

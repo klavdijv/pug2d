@@ -10,6 +10,9 @@ class EventNotifier(object):
     def remove_event_handler(self, event_name, handler):
         self.event_handlers.get(event_name, []).remove(handler)
     
+    def clear_events(self):
+        self.event_handlers = {}
+    
     def raise_event(self, event_name, *args, **kws):
         for handler in self.event_handlers.get(event_name, []):
             handler(*args, **kws)
