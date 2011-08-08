@@ -19,8 +19,9 @@ class Shape(Actor):
     def append(self, p0):
         self.object.add_point(p0.x, p0.y, p0.color, p0.outline_color)
     
-    def __init__(self, p_list=None, shader=None):
-        super(Shape, self).__init__(sf.Shape(), shader=shader)
+    def __init__(self, p_list=None, shader=None, behavior=None):
+        super(Shape, self).__init__(sf.Shape(), shader=shader,
+                                    behavior=behavior)
         if p_list is not None:
             for p0 in p_list:
                 self.append(p0)

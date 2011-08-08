@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import core, actions
+from behaviors import BaseBehavior
 import math
 import Box2D
+
+TIMESTEP = 1.0/60.0
+PPM = 100.0
 
 class ContactListener(Box2D.b2ContactListener):
     def __init__(self, level):
@@ -22,7 +26,6 @@ class ContactListener(Box2D.b2ContactListener):
         self.level.end_contact(contact)
 
 class Box2DLevel(core.Level):
-    TIMESTEP = 1.0/60.0
     VEL_ITERS = 8
     POS_ITERS = 3
     PPM = 100.0 # Pixels per meter
@@ -35,11 +38,21 @@ class Box2DLevel(core.Level):
             world.contactListener = ContactListener()
         self.contacts = []
     
+    def convert_coords_to_sf(self, game, pos):
+        x0 = PPM*pos[0]
+        y0 = game.height-(PPM*pos[1])
+        return x0, y0
+    
+    def convert_coords_to_b2(self, game, pos):
+        x0 = pos[0]/PPM
+        y0 = (game.height-pos[1])/PPM
+        return x0, y0
+    
     def update(self, game, dt):
         world = self.world
         self.contacts = []
         if dt:
-            time_step = self.TIMESTEP
+            time_step = TIMESTEP
         else:
             # Game is paused
             time_step = 0.0
@@ -87,20 +100,8 @@ class Updater(actions.Action):
     def on_start(self, actor, game):
         body = self.body
         sf_obj = actor.object
-        body.position = self.convert_coords_to_b2(game, sf_obj.position)
+        body.position = game.level.convert_coords_to_b2(game, sf_obj.position)
         body.angle = math.radians(sf_obj.rotation)
-    
-    def convert_coords_to_sf(self, game, pos):
-        PPM = game.level.PPM
-        x0 = PPM*pos[0]
-        y0 = game.window.height-(PPM*pos[1])
-        return x0, y0
-    
-    def convert_coords_to_b2(self, game, pos):
-        PPM = game.level.PPM
-        x0 = pos[0]/PPM
-        y0 = (game.window.height-pos[1])/PPM
-        return x0, y0
     
     def update(self, actor, game, dt):
         if actor.killed:
@@ -111,13 +112,36 @@ class Updater(actions.Action):
         
         sf_obj = actor.object
         body = self.body
-        sf_obj.position = self.convert_coords_to_sf(game, body.position)
+        sf_obj.position = game.level.convert_coords_to_sf(game, body.position)
         sf_obj.rotation = math.degrees(body.angle)
     
     def on_remove(self, actor, game):
         del actor.body
         game.world.DestroyBody(self.body)
 
+
+class Box2DBehavior(BaseBehavior):
+    def __init__(self, body):
+        super(Box2DBehavior, self).__init__()
+        self.body = body
+    
+    def move(self, x, y):
+        x /= PPM
+        y /= PPM
+        self.body.linearVelocity = Box2D.b2Vec2(x/TIMESTEP, y/TIMESTEP)
+    
+    def rotate(self, a):
+        a = math.radians(a)
+        self.body.angularVelocity = a/TIMESTEP
+    
+    def update(self, game):
+        sf_obj = self.actor.object
+        body = self.body
+        body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
+        body.angularVelocity = 0.0
+        sf_obj.position = game.level.convert_coords_to_sf(game, body.position)
+        sf_obj.rotation = math.degrees(body.angle)
+    
 
 # Utilities
 

@@ -6,6 +6,7 @@ Created on 24. apr. 2011
 import sf
 from support import AttrDict
 from events import EventNotifier
+from behaviors import DefaultBehavior
 
 class GameClock(object):
     def __init__(self):
@@ -306,60 +307,20 @@ class OffscreenLayer(Layer):
         window.draw(container, self.container.shader)
 
 
-class Behavior(object):
-    def __init__(self, name, action_cls, *args, **kws):
-        self.name = name
-        self.action_cls = action_cls
-        self.args = args
-        self.kws = kws
-    
-    def __call__(self):
-        return self.action_cls(*self.args, **self.kws)
-    
-
-def add_behavior(name, action_cls):
-    '''
-    Class decorator to add behaviors to Actors. Needs Python 2.6 or newer
-    @param name: unique name of behavior
-    @type name: string
-    @param action_cls: Action subclass implementing desired behavior
-    @type action_cls: Action subclass
-    '''
-    def _wrapper(actor_cls):
-        orig_init = actor_cls.__init__
-        def __init__(self, *args, **kws):
-            co_obj = action_cls.__init__.im_func.func_code
-            act_args = co_obj.co_varnames[1:co_obj.co_argcount]
-            b_args = []
-            for arg in act_args:
-                b_arg = name+'_'+arg
-                if b_arg in kws:
-                    b_args.append(kws.pop(b_arg))
-            orig_init(self, *args, **kws)
-            self.b[name] = action_cls(*b_args)
-        
-        __init__.__doc__ = orig_init.__doc__
-        actor_cls.__init__ = __init__
-        return actor_cls
-    
-    return _wrapper
-
-def create_actor_w_behaviors(actor_cls_name, actor_base_cls, **behaviors):
-    actor_cls = type(actor_cls_name, (actor_base_cls,), {})
-    for (b_name, b_act) in behaviors.items():
-        actor_cls = add_behavior(b_name, b_act)(actor_cls)
-    return actor_cls
-
-
 class BaseActor(object):
-    def __init__(self, sf_obj):
+    def __init__(self, sf_obj, behavior=None):
         self.object = sf_obj
         self.killed = False
         self.actions = []
         self._actions_d = {}
         self.action_ids = []
-        self.b = self.behaviors = AttrDict()
         self.layer = None
+        if behavior is None:
+            self.behavior = DefaultBehavior()
+        else:
+            self.behavior = behavior
+        self.behavior.actor = self
+
     
     def __getitem__(self, name):
         return self._actions_d[name]
@@ -376,7 +337,8 @@ class BaseActor(object):
         action.do_update(self, game, dt)
     
     def update(self, game, dt):
-        for action in self.b.values()+self.actions:
+        self.behavior.update(game)
+        for action in self.actions:
             self._do_action(action, game, dt)
         
         self.actions = [act for act in self.actions if not act.finished]
@@ -414,10 +376,16 @@ class BaseActor(object):
     def has_action(self, action_id):
         return action_id in self.action_ids
     
+    def move(self, x, y):
+        self.behavior.move(x, y)
+    
+    def rotate(self, a):
+        self.behavior.rotate(a)
+    
 
 class Actor(BaseActor):
-    def __init__(self, sf_obj, shader=None):
-        super(Actor, self).__init__(sf_obj)
+    def __init__(self, sf_obj, shader=None, behavior=None):
+        super(Actor, self).__init__(sf_obj, behavior=behavior)
         self.shader = None
     
     def draw(self, window):

@@ -217,7 +217,7 @@ class Move(TimedAction):
         self.dy = dy/time
     
     def update(self, actor, game, dt):
-        actor.object.move(dt*self.dx, dt*self.dy)
+        actor.move(dt*self.dx, dt*self.dy)
         super(Move, self).update(actor, game, dt)
 
 
@@ -233,7 +233,7 @@ class MoveTo(TimedAction):
         self.dy = (self.dy - actor.object.y)/self.time
     
     def update(self, actor, game, dt):
-        actor.object.move(dt*self.dx, dt*self.dy)
+        actor.move(dt*self.dx, dt*self.dy)
         super(MoveTo, self).update(actor, game, dt)
 
 
@@ -244,7 +244,7 @@ class Rotate(TimedAction):
         self.alpha = alpha/time
     
     def update(self, actor, game, dt):
-        actor.object.rotate(dt*self.alpha)
+        actor.rotate(dt*self.alpha)
         super(Rotate, self).update(actor, game, dt)
 
 class RotateTo(TimedAction):
@@ -257,7 +257,7 @@ class RotateTo(TimedAction):
         self.alpha = (self.alpha-actor.object.rotation)/self.time
     
     def update(self, actor, game, dt):
-        actor.object.rotate(dt*self.alpha)
+        actor.rotate(dt*self.alpha)
         super(RotateTo, self).update(actor, game, dt)
 
 
