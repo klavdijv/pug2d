@@ -10,8 +10,11 @@ class BaseBehavior(object):
     def rotate(self, a):
         raise NotImplemented()
     
-    def update(self, game):
+    def stop(self, movement=False, rotation=False):
         raise NotImplemented()
+    
+    def update(self, game, dt):
+        self.actor.update(game, dt)
 
 
 class DefaultBehavior(BaseBehavior):
@@ -21,5 +24,8 @@ class DefaultBehavior(BaseBehavior):
     def rotate(self, a):
         self.actor.object.rotate(a)
     
-    def update(self, game):
+    def update(self, game, dt):
+        super(DefaultBehavior, self).update(game, dt)
+
+    def stop(self, movement=False, rotation=False):
         pass

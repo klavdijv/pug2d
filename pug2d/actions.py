@@ -1,37 +1,41 @@
 import sf
 import bisect
 from .core import GameClock
+from .events import EventNotifier
 
-class Action(object):
+class Action(EventNotifier):
     _id_ = ''
     
     def __init__(self):
+        super(Action, self).__init__()
         self.started  = False
         self.finished = False
         self.name = ''
+        self.owner = None
     
     def on_assign(self, actor):
+        self.owner = actor
+    
+    def on_start(self, game):
         pass
     
-    def on_start(self, actor, game):
-        pass
-    
-    def on_end(self, actor, game):
+    def on_end(self, game):
         pass
     
     def finish(self):
         self.finished = True
+        self.raise_event('finished')
 
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
         pass
     
-    def do_update(self, actor, game, dt):
+    def do_update(self, game, dt):
         if not self.started:
-            self.on_start(actor, game)
+            self.on_start(game)
             self.started = True
-        self.update(actor, game, dt)
+        self.update(game, dt)
         if self.finished:
-            self.on_end(actor, game)
+            self.on_end(game)
     
     def reset(self):
         self.finished = False
@@ -51,12 +55,12 @@ class TimedAction(Action):
         self.time = time
         self.clock = GameClock()
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
         if self.finished:
             return
-        super(TimedAction, self).update(actor, game, dt)
+        super(TimedAction, self).update(game, dt)
         if self.time > 0.0 and self.clock.total_time > self.time:
-            self.finished = True
+            self.finish()
     
     def reset(self):
         super(TimedAction, self).reset()
@@ -74,15 +78,16 @@ class Sequence(Action):
         self.actions = actions[:]
         self.actions_back = actions[:]
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         if self.finished:
             return
-        super(Sequence, self).update(actor, game, dt)
+        super(Sequence, self).update(game, dt)
         for action in self.actions:
-            action.do_update(actor, game, dt)
+            action.do_update(game, dt)
         self.actions = [act for act in self.actions if not act.finished]
         if not self.actions:
-            self.finished = True
+            self.finish()
     
     def reset(self):
         super(Sequence, self).reset()
@@ -96,6 +101,7 @@ class Sequence(Action):
             action.pause(value)
     
     def on_assign(self, actor):
+        super(Sequence).on_assign(actor)
         for action in self.actions:
             action.on_assign(actor)
     
@@ -107,19 +113,20 @@ class Chain(Action):
         self.actions = actions[:]
         self.actions_back = actions[:]
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         if self.finished:
             return
-        super(Chain, self).update(actor, game, dt)
+        super(Chain, self).update(game, dt)
         action = self.actions[0]
-        action.do_update(actor, game, dt)
+        action.do_update(game, dt)
         if action.finished:
             self.actions.pop(0)
             if self.actions:
                 action = self.actions[0]
                 action.reset()
             else:
-                self.finished = True
+                self.finish()
     
     def reset(self):
         super(Chain, self).reset()
@@ -133,6 +140,7 @@ class Chain(Action):
             action.pause(value)
 
     def on_assign(self, actor):
+        super(Chain, self).on_assign(actor)
         for action in self.actions:
             action.on_assign(actor)
     
@@ -145,17 +153,17 @@ class Repeat(Action):
         self.num = num
         self.count = 0
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
         if self.finished:
             return
-        super(Repeat, self).update(actor, game, dt)
-        self.action.do_update(actor, game, dt)
+        super(Repeat, self).update(game, dt)
+        self.action.do_update(game, dt)
         if self.action.finished:
             self.count += 1
             if self.num == 0 or self.num > self.count:
                 self.action.reset()
             else:
-                self.finished = True
+                self.finish()
     
     def reset(self):
         super(Repeat, self).reset()
@@ -167,6 +175,7 @@ class Repeat(Action):
         self.action.pause(value)
     
     def on_assign(self, actor):
+        super(Repeat, self).on_assign(actor)
         self.action.on_assign(actor)
 
 
@@ -177,9 +186,9 @@ Pause = TimedAction
 
 class Kill(Action):
     
-    def update(self, actor, game, dt):
-        actor.kill()
-        self.finished = True
+    def update(self, game, dt):
+        self.owner.kill()
+        self.finish()
 
 
 class Call(Action):
@@ -189,10 +198,11 @@ class Call(Action):
         self.args = args
         self.kws = kws
     
-    def update(self, actor, game, dt):
-        super(Call, self).update(actor, game, dt)
+    def update(self, game, dt):
+        actor = self.owner
+        super(Call, self).update(game, dt)
         self.func(actor, *self.args, **self.kws)
-        self.finished = True
+        self.finish()
         
 
 class DefferedCall(TimedAction):
@@ -203,8 +213,9 @@ class DefferedCall(TimedAction):
         self.args = args
         self.kws = kws
     
-    def update(self, actor, game, dt):
-        super(DefferedCall, self).update(actor, game, dt)
+    def update(self, game, dt):
+        actor = self.owner
+        super(DefferedCall, self).update(game, dt)
         if self.finished:
             self.func(actor, *self.args, **self.kws)
 
@@ -216,10 +227,14 @@ class Move(TimedAction):
         self.dx = dx/time
         self.dy = dy/time
     
-    def update(self, actor, game, dt):
-        actor.move(dt*self.dx, dt*self.dy)
-        super(Move, self).update(actor, game, dt)
-
+    def update(self, game, dt):
+        self.owner.move(dt*self.dx, dt*self.dy)
+        super(Move, self).update(game, dt)
+    
+    def finish(self):
+        super(Move, self).finish()
+        self.owner.stop(movement=True)
+        
 
 class MoveTo(TimedAction):
     
@@ -228,14 +243,20 @@ class MoveTo(TimedAction):
         self.dx = x
         self.dy = y
     
-    def on_start(self, actor, game):
+    def on_start(self, game):
+        actor = self.owner
         self.dx = (self.dx - actor.object.x)/self.time
         self.dy = (self.dy - actor.object.y)/self.time
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         actor.move(dt*self.dx, dt*self.dy)
-        super(MoveTo, self).update(actor, game, dt)
+        super(MoveTo, self).update(game, dt)
 
+    def finish(self):
+        super(MoveTo, self).finish()
+        self.owner.stop(movement=True)
+        
 
 class Rotate(TimedAction):
     
@@ -243,9 +264,15 @@ class Rotate(TimedAction):
         super(Rotate, self).__init__(time)
         self.alpha = alpha/time
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         actor.rotate(dt*self.alpha)
-        super(Rotate, self).update(actor, game, dt)
+        super(Rotate, self).update(game, dt)
+
+    def finish(self):
+        super(Rotate, self).finish()
+        self.owner.stop(rotation=True)
+        
 
 class RotateTo(TimedAction):
     
@@ -253,13 +280,19 @@ class RotateTo(TimedAction):
         super(RotateTo, self).__init__(time)
         self.alpha = alpha
     
-    def on_start(self, actor, game):
+    def on_start(self, game):
+        actor = self.owner
         self.alpha = (self.alpha-actor.object.rotation)/self.time
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         actor.rotate(dt*self.alpha)
-        super(RotateTo, self).update(actor, game, dt)
+        super(RotateTo, self).update(game, dt)
 
+    def finish(self):
+        super(RotateTo, self).finish()
+        self.owner.stop(rotation=True)
+        
 
 class Animate(TimedAction):
     
@@ -296,12 +329,13 @@ class Animate(TimedAction):
         self.old_time_factor = self.clock.time_factor
     
     def on_assign(self, actor):
+        super(Animate, self).on_assign(actor)
         image = actor.object.image
         self.frame_width = image.width//self.num_cols
         self.frame_height = image.height//self.num_rows
     
-    def update(self, actor, game, dt):
-        sprite = actor.object
+    def update(self, game, dt):
+        sprite = self.owner.object
         time0 = self.clock.total_time
         if time0 > self.time:
             self.count += 1
@@ -315,6 +349,7 @@ class Animate(TimedAction):
         sprite.sub_rect = sf.IntRect(col*self.frame_width,
                                      row*self.frame_height,
                                      self.frame_width, self.frame_height)
+
     def stop(self):
         self.old_time_factor = self.clock.time_factor
         self.clock.time_factor = 0.0
@@ -332,8 +367,8 @@ class CameraFollow(Action):
         self.target = target
         self.follow_rotation = follow_rotation
     
-    def update(self, actor, game, dt):
-        camera = actor.object
+    def update(self, game, dt):
+        camera = self.owner.object
         sprite = self.target.object
         camera.center = sprite.position
         if self.follow_rotation:

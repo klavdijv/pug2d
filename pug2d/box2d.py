@@ -134,13 +134,20 @@ class Box2DBehavior(BaseBehavior):
         a = math.radians(a)
         self.body.angularVelocity = a/TIMESTEP
     
-    def update(self, game):
+    def stop(self, movement=False, rotation=False):
+        if movement:
+            self.body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
+        if rotation:
+            self.body.angularVelocity = 0.0
+    
+    def update(self, game, dt):
         sf_obj = self.actor.object
         body = self.body
-        body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
-        body.angularVelocity = 0.0
+#        body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
+#        body.angularVelocity = 0.0
         sf_obj.position = game.level.convert_coords_to_sf(game, body.position)
         sf_obj.rotation = math.degrees(body.angle)
+        super(Box2DBehavior, self).update(game, dt)
     
 
 # Utilities

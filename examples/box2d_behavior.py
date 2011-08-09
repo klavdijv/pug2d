@@ -24,22 +24,20 @@ class Level1(box2d.Box2DLevel):
             sprite.origin = (self.im0.width//2, self.im0.height//2)
 #            sprite.position = (x, 300)
             body = world.CreateDynamicBody()
-            if x == 100:
-                body.CreateCircleFixture(radius=2.5, density=1.0, friction=0.3)
-            else:
-                body.CreateCircleFixture(radius=2.5, density=5.0, friction=0.3)
+            body.linearDamping = 10.0
+            body.CreateCircleFixture(radius=2.5, density=10.0, friction=0.3)
             body.position = self.convert_coords_to_b2(game, (x, 300))
             body.fixedRotation = True
             actor = core.Actor(sprite, behavior=box2d.Box2DBehavior(body))
             layer.add_actor(actor)
         actors = self.layers[0].actors
         actor0 = actors[0]
-        act = actions.Chain([actions.Move(5.0, 800, -50),
+        act = actions.Chain([actions.Move(10.0, 400, -50),
                              actions.Rotate(3.0, 360),
                              actions.MoveTo(2.0, 100, 300),
                              actions.MoveTo(10.0, 700, 300)])
         actor0.add_action(act)
-    
+
 
 game = core.Game(800, 600)
 level = Level1(b2.world(gravity=(0, 0)))

@@ -263,7 +263,7 @@ class Layer(object):
         for camera in self.cameras:
             camera.update(game, dt)
         for actor in self.actors:
-            actor.update(game, dt)
+            actor.behavior.update(game, dt)
         self.actors = [actor for actor in self.actors if not actor.killed]
         self.z_order()
         for plugin in self.update_plugins:
@@ -334,10 +334,9 @@ class BaseActor(object):
     
     def _do_action(self, action, game, dt):
         action.pause(dt == 0)
-        action.do_update(self, game, dt)
+        action.do_update(game, dt)
     
     def update(self, game, dt):
-        self.behavior.update(game)
         for action in self.actions:
             self._do_action(action, game, dt)
         
@@ -381,6 +380,9 @@ class BaseActor(object):
     
     def rotate(self, a):
         self.behavior.rotate(a)
+    
+    def stop(self, movement=False, rotation=False):
+        self.behavior.stop(movement, rotation)
     
 
 class Actor(BaseActor):
