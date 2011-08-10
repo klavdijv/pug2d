@@ -6,7 +6,10 @@ import math
 import Box2D
 
 TIMESTEP = 1.0/60.0
-PPM = 100.0
+PPM = 100.0 # Pixels per meter
+VEL_ITERS = 8
+POS_ITERS = 3
+HEIGHT = 600
 
 class ContactListener(Box2D.b2ContactListener):
     def __init__(self, level):
@@ -26,9 +29,6 @@ class ContactListener(Box2D.b2ContactListener):
         self.level.end_contact(contact)
 
 class Box2DLevel(core.Level):
-    VEL_ITERS = 8
-    POS_ITERS = 3
-    PPM = 100.0 # Pixels per meter
     
     def __init__(self, world, use_listener=False):
         super(Box2DLevel, self).__init__()
@@ -38,14 +38,14 @@ class Box2DLevel(core.Level):
             world.contactListener = ContactListener()
         self.contacts = []
     
-    def convert_coords_to_sf(self, game, pos):
+    def convert_coords_to_sf(self, pos):
         x0 = PPM*pos[0]
-        y0 = game.height-(PPM*pos[1])
+        y0 = HEIGHT-(PPM*pos[1])
         return x0, y0
     
-    def convert_coords_to_b2(self, game, pos):
+    def convert_coords_to_b2(self, pos):
         x0 = pos[0]/PPM
-        y0 = (game.height-pos[1])/PPM
+        y0 = (HEIGHT-pos[1])/PPM
         return x0, y0
     
     def update(self, game, dt):
@@ -56,7 +56,7 @@ class Box2DLevel(core.Level):
         else:
             # Game is paused
             time_step = 0.0
-        world.Step(time_step, self.VEL_ITERS, self.POS_ITERS)
+        world.Step(time_step, VEL_ITERS, POS_ITERS)
         world.ClearForces()
         
         super(Box2DLevel, self).update(game, dt)
@@ -112,7 +112,7 @@ class Updater(actions.Action):
         
         sf_obj = actor.object
         body = self.body
-        sf_obj.position = game.level.convert_coords_to_sf(game, body.position)
+        sf_obj.position = game.level.convert_coords_to_sf(body.position)
         sf_obj.rotation = math.degrees(body.angle)
     
     def on_remove(self, actor, game):
@@ -145,7 +145,7 @@ class Box2DBehavior(BaseBehavior):
         body = self.body
 #        body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
 #        body.angularVelocity = 0.0
-        sf_obj.position = game.level.convert_coords_to_sf(game, body.position)
+        sf_obj.position = game.level.convert_coords_to_sf(body.position)
         sf_obj.rotation = math.degrees(body.angle)
         super(Box2DBehavior, self).update(game, dt)
     

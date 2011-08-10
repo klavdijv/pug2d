@@ -153,7 +153,7 @@ class Game(EventNotifier):
     
     def set_fullscreen(self, fullscreen):
         self.fullscreen = fullscreen
-#        self.window.close()
+        self.window.close()
         videomode, style = self._get_videomode()
         self.window.create(videomode, self.title, style)
     

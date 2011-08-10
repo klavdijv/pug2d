@@ -4,8 +4,6 @@ from pug2d import core, actions, box2d
 from Box2D import b2
 import sf
 
-box2d.PPM = 20.0
-
 class Level1(box2d.Box2DLevel):
     
     def __init__(self, world):
@@ -26,18 +24,22 @@ class Level1(box2d.Box2DLevel):
             body = world.CreateDynamicBody()
             body.linearDamping = 10.0
             body.CreateCircleFixture(radius=2.5, density=10.0, friction=0.3)
-            body.position = self.convert_coords_to_b2(game, (x, 300))
+            body.position = self.convert_coords_to_b2((x, 300))
             body.fixedRotation = True
             actor = core.Actor(sprite, behavior=box2d.Box2DBehavior(body))
             layer.add_actor(actor)
         actors = self.layers[0].actors
-        actor0 = actors[0]
         act = actions.Chain([actions.Move(10.0, 400, -50),
                              actions.Rotate(3.0, 360),
                              actions.MoveTo(2.0, 100, 300),
                              actions.MoveTo(10.0, 700, 300)])
-        actor0.add_action(act)
+        actors[0].add_action(act)
+        actors[1].add_action(actions.Move(5.0, -400, -50))
+        actors[2].add_action(actions.MoveTo(15.0, 10, 180))
 
+
+box2d.PPM = 20.0
+box2d.HEIGHT = 600
 
 game = core.Game(800, 600)
 level = Level1(b2.world(gravity=(0, 0)))
