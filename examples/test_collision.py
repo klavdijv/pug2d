@@ -88,7 +88,7 @@ class Level1(core.Level):
         coll_group.add_event_handler('collision', self.on_collision)
     
     def on_collision(self, actor1, actor2, manifold):
-        print 'Collision happened'
+        print('Collision happened')
 
 
 def main():

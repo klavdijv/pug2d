@@ -4,9 +4,9 @@ Created on 24. apr. 2011
 @author: klavdij
 '''
 import sf
-from support import AttrDict
-from events import EventNotifier
-from behaviors import DefaultBehavior
+from .support import AttrDict
+from .events import EventNotifier
+from .behaviors import DefaultBehavior
 
 class GameClock(object):
     def __init__(self):
@@ -354,7 +354,7 @@ class BaseActor(object):
         action.on_assign(self)
 
     def remove_action(self, action):
-        if isinstance(action, basestring):
+        if isinstance(action, str):
             try:
                 action = self._actions_d[action]
             except KeyError:

@@ -101,7 +101,7 @@ class Sequence(Action):
             action.pause(value)
     
     def on_assign(self, actor):
-        super(Sequence).on_assign(actor)
+        super(Sequence, self).on_assign(actor)
         for action in self.actions:
             action.on_assign(actor)
     

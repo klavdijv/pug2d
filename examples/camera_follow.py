@@ -16,7 +16,8 @@ class Mover(actions.Action):
         super(Mover, self).__init__()
         self.speed = speed
         
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         sprite = actor.object
         if sf.Keyboard.is_key_pressed(sf.Keyboard.LEFT):
             sprite.rotate(-90.0*dt)

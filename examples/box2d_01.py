@@ -2,11 +2,14 @@
 
 from pug2d import core
 from pug2d.box2d import Box2DLevel, Updater
+from pug2d import box2d
 from Box2D import b2
 import sf
 
+
+box2d.PPM = 20
+
 class Level1(Box2DLevel):
-    PPM = 20
     
     def __init__(self, world):
         super(Level1, self).__init__(world)

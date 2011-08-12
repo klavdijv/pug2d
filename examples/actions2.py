@@ -14,8 +14,8 @@ class Level1(core.Level):
         layer = core.Layer()
         self.add_layer(layer)
         self.im0 = sf.Image.load_from_file('princess.png')
-        for x in xrange(50, 600, 50):
-            for y in xrange(50, 400, 80):
+        for x in range(50, 600, 50):
+            for y in range(50, 400, 80):
                 sprite = sf.Sprite(self.im0)
                 sprite.position = (x, y)
                 sprite.origin = (sprite.width//2, sprite.height//2)

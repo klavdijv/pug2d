@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import core, actions
-from behaviors import BaseBehavior
+from . import core, actions
+from .behaviors import BaseBehavior
 import math
 import Box2D
 
@@ -94,16 +94,18 @@ class Updater(actions.Action):
         self.body = body
     
     def on_assign(self, actor):
+        super(Updater, self).on_assign(actor)
         self.body.userData = actor
         actor.body = self.body
     
-    def on_start(self, actor, game):
+    def on_start(self, game):
         body = self.body
-        sf_obj = actor.object
-        body.position = game.level.convert_coords_to_b2(game, sf_obj.position)
+        sf_obj = self.owner.object
+        body.position = game.level.convert_coords_to_b2(sf_obj.position)
         body.angle = math.radians(sf_obj.rotation)
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         if actor.killed:
             if self.body.userData:
                 self.body.userData = None
@@ -115,8 +117,8 @@ class Updater(actions.Action):
         sf_obj.position = game.level.convert_coords_to_sf(body.position)
         sf_obj.rotation = math.degrees(body.angle)
     
-    def on_remove(self, actor, game):
-        del actor.body
+    def on_remove(self, game):
+        del self.owner.body
         game.world.DestroyBody(self.body)
 
 

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from pug2d import core, actions
+from pug2d import core, actions, box2d
 from pug2d.box2d import Box2DLevel, Updater, can_see
 from Box2D import b2
 import sf
 
 
+box2d.PPM = 20
+
 class Level1(Box2DLevel):
-    PPM = 20
-    
     def __init__(self, world):
         super(Level1, self).__init__(world)
         layer = core.Layer()
@@ -34,11 +34,11 @@ class Level1(Box2DLevel):
         actors[0].add_action(actions.DefferedCall(1.0, self.test_los))
     
     def test_los(self, actor):
-        max_dist = 800.0/self.PPM
+        max_dist = 800.0/box2d.PPM
         actor2 = self.layers[0].actors[2]
-        print can_see(actor, actor2, max_dist, 45.0)
+        print(can_see(actor, actor2, max_dist, 45.0))
         self.layers[0].actors[1].obstacle = False
-        print can_see(actor, actor2, max_dist, 45.0)
+        print(can_see(actor, actor2, max_dist, 45.0))
 
 
 game = core.Game(800, 600)

@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from pug2d import core, actions
+from pug2d import core, actions, box2d
 from pug2d.box2d import Box2DLevel, Updater
 from Box2D import b2
 import sf
 import random
+
+box2d.PPM = 20
 
 class Move(actions.TimedAction):
     def __init__(self, time):
         super(Move, self).__init__(time)
         self.fv = b2.vec2(random.randrange(-45, 45), random.randrange(-45, 45))
     
-    def update(self, actor, game, dt):
+    def update(self, game, dt):
+        actor = self.owner
         if self.finished:
             new_act = actions.Chain([actions.Pause(random.randrange(15, 20)),
                                      Move(0.1*random.randrange(10, 30))
@@ -30,17 +33,16 @@ class Colorize(actions.TimedAction):
         self.color = color
     
     def on_assign(self, actor):
+        super(Colorize, self).on_assign(actor)
         actor.object.color = self.color
     
-    def update(self, actor, game, dt):
-        super(Colorize, self).update(actor, game, dt)
+    def update(self, game, dt):
+        super(Colorize, self).update(game, dt)
         if self.finished:
-            actor.object.color = sf.Color.WHITE
-        
+            self.owner.object.color = sf.Color.WHITE
+
 
 class Level1(Box2DLevel):
-    PPM = 20
-    
     def __init__(self, world):
         super(Level1, self).__init__(world)
         layer = core.Layer()

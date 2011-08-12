@@ -94,7 +94,7 @@ class Canvas(object):
         pass
     
     def draw(self, parent, window):
-        items = self.items.values()
+        items = list(self.items.values())
         items.sort(key=lambda obj: obj.z)
         self._sorted = True
         for item in items:
