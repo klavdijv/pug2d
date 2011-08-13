@@ -101,6 +101,10 @@ class Level(object):
     
 
 class Game(EventNotifier):
+    shortcuts = {'ESC': True,
+                 'PAUSE': True,
+                 'FULLSCREEN': True,
+                 'FPS': True}
     
     def __init__(self, width, height, bpp=32, title='Basic game',
                  framerate_limit=60, fullscreen=False):
@@ -177,6 +181,7 @@ class Game(EventNotifier):
         self._running = False
     
     def run(self, level):
+        shortcuts = self.shortcuts
         self.set_level(level)
         self._running = True
         self.window.framerate_limit = self.framerate_limit
@@ -187,14 +192,17 @@ class Game(EventNotifier):
                 if event.type == sf.Event.CLOSED:
                     self._running = False
                 if event.type == sf.Event.KEY_RELEASED:
-                    if event.code == sf.Keyboard.ESCAPE:
+                    if shortcuts['ESC'] and event.code == sf.Keyboard.ESCAPE:
                         self._running = False
-                    if event.code == sf.Keyboard.F and event.control:
-                        self.set_fullscreen(not self.fullscreen)
-                    if event.code == sf.Keyboard.X and event.control:
-                        self.show_fps = not self.show_fps
-                    if event.code == sf.Keyboard.P and event.control:
-                        self.clock.paused = not self.clock.paused
+                    if shortcuts['FULLSCREEN']:
+                        if event.code == sf.Keyboard.F and event.control:
+                            self.set_fullscreen(not self.fullscreen)
+                    if shortcuts['FPS']:
+                        if event.code == sf.Keyboard.X and event.control:
+                            self.show_fps = not self.show_fps
+                    if shortcuts['PAUSE']:
+                        if event.code == sf.Keyboard.P and event.control:
+                            self.clock.paused = not self.clock.paused
                 self.raise_event(event.type, event)
                 self.events.append(event)
             
@@ -261,11 +269,25 @@ class Layer(object):
     
     def update(self, game, dt):
         for camera in self.cameras:
-            camera.update(game, dt)
+            camera.behavior.update(game, dt)
+
         for actor in self.actors:
             actor.behavior.update(game, dt)
-        self.actors = [actor for actor in self.actors if not actor.killed]
+        
+        actors = self.actors    
+        for i in range(len(self.actors)-1, -1, -1):
+            actor = actors[i]
+            if actor.killed:
+                actor.cleanup
+                del actors[i]
+
+#        for actor in self.actors:
+#            if actor.killed:
+#                actor.cleanup()
+#        self.actors = [actor for actor in self.actors if not actor.killed]
+        
         self.z_order()
+        
         for plugin in self.update_plugins:
             plugin.update(self, game, dt)
     
@@ -345,6 +367,9 @@ class BaseActor(object):
     def draw(self, window):
         pass
     
+    def cleanup(self):
+        self.behavior.cleanup()
+    
     def add_action(self, action, name=''):
         self.actions.append(action)
         if name:
@@ -363,7 +388,14 @@ class BaseActor(object):
         if action.name:
             del self._actions_d[action.name]
         self.action_ids.remove(action.id)
-        action.on_remove(self)
+        action.on_remove()
+    
+    def remove_all_actions(self):
+        for action in self.actions:
+            action.on_remove()
+        self.action_ids = []
+        self._actions_d = {}
+        self.actions = []
     
     def replace_action(self, old_action, new_action):
         self.actions.remove(old_action)

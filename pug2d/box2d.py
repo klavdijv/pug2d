@@ -117,9 +117,10 @@ class Updater(actions.Action):
         sf_obj.position = game.level.convert_coords_to_sf(body.position)
         sf_obj.rotation = math.degrees(body.angle)
     
-    def on_remove(self, game):
+    def on_remove(self):
+        level = self.owner.layer.level
         del self.owner.body
-        game.world.DestroyBody(self.body)
+        level.world.DestroyBody(self.body)
 
 
 class Box2DBehavior(BaseBehavior):
@@ -145,12 +146,13 @@ class Box2DBehavior(BaseBehavior):
     def update(self, game, dt):
         sf_obj = self.actor.object
         body = self.body
-#        body.linearVelocity = Box2D.b2Vec2(0.0, 0.0)
-#        body.angularVelocity = 0.0
         sf_obj.position = game.level.convert_coords_to_sf(body.position)
         sf_obj.rotation = math.degrees(body.angle)
         super(Box2DBehavior, self).update(game, dt)
     
+    def cleanup(self):
+        self.actor.layer.level.world.DestroyBody(self.body)
+
 
 # Utilities
 

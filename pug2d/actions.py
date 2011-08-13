@@ -22,6 +22,9 @@ class Action(EventNotifier):
     def on_end(self, game):
         pass
     
+    def on_remove(self):
+        self.finished = True
+    
     def finish(self):
         self.finished = True
         self.raise_event('finished')

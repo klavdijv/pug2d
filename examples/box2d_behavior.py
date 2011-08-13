@@ -36,6 +36,8 @@ class Level1(box2d.Box2DLevel):
         actors[0].add_action(act)
         actors[1].add_action(actions.Move(5.0, -400, -50))
         actors[2].add_action(actions.MoveTo(15.0, 10, 180))
+        act2 = actions.Chain([actions.Pause(5.0), actions.Kill()])
+        actors[3].add_action(act2)
 
 
 box2d.PPM = 20.0

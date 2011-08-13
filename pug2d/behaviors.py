@@ -15,6 +15,9 @@ class BaseBehavior(object):
     
     def update(self, game, dt):
         self.actor.update(game, dt)
+    
+    def cleanup(self):
+        pass
 
 
 class DefaultBehavior(BaseBehavior):
