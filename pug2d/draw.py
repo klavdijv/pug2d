@@ -14,7 +14,8 @@ class CanvasItem(object):
         self.z = z
     
     def __getattr__(self, name):
-        return getattr(self.shape, name)
+        if 'shape' in self.__dict__:
+            return getattr(self.shape, name)
     
     def __setattr__(self, name, value):
         if hasattr(self, 'shape') and hasattr(self.shape, name):
