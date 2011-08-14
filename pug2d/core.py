@@ -106,7 +106,7 @@ class Game(EventNotifier):
                  'FULLSCREEN': True,
                  'FPS': True}
     
-    def __init__(self, width, height, bpp=32, title='Basic game',
+    def __init__(self, width, height, bpp=32, title=b'Basic game',
                  framerate_limit=60, fullscreen=False):
         super(Game, self).__init__()
         self.width = width
