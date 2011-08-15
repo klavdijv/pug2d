@@ -134,8 +134,7 @@ class Box2DBehavior(BaseBehavior):
         self.body.linearVelocity = Box2D.b2Vec2(x/TIMESTEP, y/TIMESTEP)
     
     def rotate(self, a):
-        a = math.radians(a)
-        self.body.angularVelocity = a/TIMESTEP
+        self.body.angularVelocity = math.radians(a)/TIMESTEP
     
     def stop(self, movement=False, rotation=False):
         if movement:

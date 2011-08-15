@@ -4,7 +4,6 @@ Created on 24. apr. 2011
 @author: klavdij
 '''
 import sf
-from .support import AttrDict
 from .events import EventNotifier
 from .behaviors import DefaultBehavior
 
