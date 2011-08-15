@@ -52,9 +52,10 @@ class GameClock(object):
         return dt
 
 
-class Level(object):
+class Level(EventNotifier):
     
     def __init__(self):
+        super(Level, self).__init__()
         self.layers = []
         self.game = None
         self.update_plugins = []
@@ -234,9 +235,10 @@ class Game(EventNotifier):
         return self.window.get_input()
     
 
-class Layer(object):
+class Layer(EventNotifier):
     
     def __init__(self):
+        super(Layer, self).__init__()
         self.actors = []
         self.cameras = []
         self.update_plugins = []
@@ -328,8 +330,9 @@ class OffscreenLayer(Layer):
         window.draw(container, self.container.shader)
 
 
-class BaseActor(object):
+class BaseActor(EventNotifier):
     def __init__(self, sf_obj, behavior=None):
+        super(BaseActor, self).__init__()
         self.object = sf_obj
         self.killed = False
         self.actions = []

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-class BaseBehavior(object):
+from .events import EventNotifier
+
+class BaseBehavior(EventNotifier):
     def __init__(self):
+        super(BaseBehavior, self).__init__()
         self.actor = None
     
     def move(self, x, y):
