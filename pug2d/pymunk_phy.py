@@ -53,6 +53,12 @@ class PymunkBehavior(BaseBehavior):
         else:
             self.shapes = shapes
     
+    def initialize(self):
+        space = self.actor.layer.level.space
+        body = self.body
+        if body not in space._bodies:
+            space.add(body, *self.shapes)
+    
     def move(self, x, y):
         self.body.velocity = (x/TIMESTEP, y/TIMESTEP)
     

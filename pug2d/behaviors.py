@@ -7,6 +7,9 @@ class BaseBehavior(EventNotifier):
         super(BaseBehavior, self).__init__()
         self.actor = None
     
+    def initialize(self):
+        pass
+    
     def move(self, x, y):
         raise NotImplemented()
     

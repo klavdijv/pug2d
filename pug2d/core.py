@@ -61,6 +61,10 @@ class Level(EventNotifier):
         self.update_plugins = []
         self.draw_plugins = []
     
+    def initialize(self):
+        for layer in self.layers:
+            layer.initialize()
+    
     def add_plugin(self, plugin):
         if hasattr(plugin, 'update'):
             self.update_plugins.append(plugin)
@@ -94,6 +98,8 @@ class Level(EventNotifier):
     def add_layer(self, layer):
         self.layers.append(layer)
         layer.level = self
+        if self.game:
+            layer.initialize()
     
     def remove_layer(self, layer):
         self.layers.remove(layer)
@@ -174,6 +180,7 @@ class Game(EventNotifier):
         if hasattr(level, 'on_start'):
             level.on_start()
         level.game = self
+        level.initialize()
     
     level = property(get_level, set_level)
     
@@ -245,9 +252,17 @@ class Layer(EventNotifier):
         self.draw_plugins = []
         self.level = None
     
+    def initialize(self):
+        for camera in self.cameras:
+            camera.initialize()
+        for actor in self.actors:
+            actor.initialize()
+    
     def add_camera(self, camera):
         self.cameras.append(camera)
         camera.layer = self
+        if self.level.game:
+            camera.initialize()
     
     def remove_camera(self, camera):
         self.cameras.remove(camera)
@@ -304,6 +319,8 @@ class Layer(EventNotifier):
     def add_actor(self, actor):
         self.actors.append(actor)
         actor.layer = self
+        if self.level.game:
+            actor.initialize()
     
     def remove_actor(self, actor):
         self.actors.remove(actor)
@@ -359,6 +376,9 @@ class BaseActor(EventNotifier):
     def _do_action(self, action, game, dt):
         action.pause(dt == 0)
         action.do_update(game, dt)
+    
+    def initialize(self):
+        self.behavior.initialize()
     
     def update(self, game, dt):
         for action in self.actions:
