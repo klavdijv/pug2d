@@ -53,7 +53,7 @@ class PymunkBehavior(BaseBehavior):
         else:
             self.shapes = shapes
     
-    def initialize(self):
+    def on_start(self):
         space = self.actor.layer.level.space
         body = self.body
         if body not in space._bodies:
@@ -78,6 +78,6 @@ class PymunkBehavior(BaseBehavior):
         sf_obj.rotation = math.degrees(body.angle)
         super(PymunkBehavior, self).update(game, dt)
     
-    def cleanup(self):
+    def on_end(self):
         space = self.actor.layer.level.space
         space.remove(self.body, *self.shapes)

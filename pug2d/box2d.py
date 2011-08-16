@@ -149,7 +149,7 @@ class Box2DBehavior(BaseBehavior):
         sf_obj.rotation = math.degrees(body.angle)
         super(Box2DBehavior, self).update(game, dt)
     
-    def cleanup(self):
+    def on_end(self):
         self.actor.layer.level.world.DestroyBody(self.body)
 
 

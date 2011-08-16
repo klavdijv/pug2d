@@ -24,7 +24,6 @@ class Level1(pymunk_phy.PymunkLevel):
             body = pm.Body(50.0, pm.inf)
             shape = pm.Circle(body, 50.0)
             body.position = self.convert_coords((x, 300))
-#            space.add(body, shape)
             b = pymunk_phy.PymunkBehavior(body, shape)
             actor = core.Actor(sprite, behavior=b)
             layer.add_actor(actor)

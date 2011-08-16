@@ -7,7 +7,10 @@ class BaseBehavior(EventNotifier):
         super(BaseBehavior, self).__init__()
         self.actor = None
     
-    def initialize(self):
+    def on_start(self):
+        pass
+    
+    def on_end(self):
         pass
     
     def move(self, x, y):
@@ -21,9 +24,6 @@ class BaseBehavior(EventNotifier):
     
     def update(self, game, dt):
         self.actor.update(game, dt)
-    
-    def cleanup(self):
-        pass
 
 
 class DefaultBehavior(BaseBehavior):

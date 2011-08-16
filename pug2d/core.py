@@ -61,10 +61,6 @@ class Level(EventNotifier):
         self.update_plugins = []
         self.draw_plugins = []
     
-    def initialize(self):
-        for layer in self.layers:
-            layer.initialize()
-    
     def add_plugin(self, plugin):
         if hasattr(plugin, 'update'):
             self.update_plugins.append(plugin)
@@ -78,10 +74,14 @@ class Level(EventNotifier):
             self.draw_plugins.remove(plugin)
     
     def on_start(self):
-        pass
+        for layer in self.layers:
+            layer.on_start()
     
     def on_end(self):
-        pass
+        for layer in self.layers:
+            layer.on_end()
+            layer.level = None
+        self.layers = []
     
     def update(self, game, dt):
         for layer in self.layers:
@@ -103,6 +103,7 @@ class Level(EventNotifier):
     
     def remove_layer(self, layer):
         self.layers.remove(layer)
+        layer.on_end()
         layer.level = None
     
 
@@ -173,14 +174,11 @@ class Game(EventNotifier):
     def set_level(self, level):
         assert isinstance(level, Level)
         if self._level is not None:
-            if hasattr(self._level, 'on_end'):
-                self._level.on_end()
+            self._level.on_end()
             self._level.game = None
         self._level = level
-        if hasattr(level, 'on_start'):
-            level.on_start()
+        level.on_start()
         level.game = self
-        level.initialize()
     
     level = property(get_level, set_level)
     
@@ -231,6 +229,9 @@ class Game(EventNotifier):
                 self.window.draw(self.fps_text)
             self.window.display()
             self.on_loop_end()
+
+        self._level.on_end()
+        self._level.game = None
         self.window.close()
     
     def get_default_camera(self):
@@ -252,20 +253,29 @@ class Layer(EventNotifier):
         self.draw_plugins = []
         self.level = None
     
-    def initialize(self):
+    def on_start(self):
         for camera in self.cameras:
-            camera.initialize()
+            camera.on_start()
         for actor in self.actors:
-            actor.initialize()
+            actor.on_start()
+    
+    def on_end(self):
+        for camera in self.cameras:
+            camera.on_end()
+            camera.layer = None
+        for actor in self.actors:
+            actor.on_end()
+            actor.layer = None
     
     def add_camera(self, camera):
         self.cameras.append(camera)
         camera.layer = self
         if self.level.game:
-            camera.initialize()
+            camera.on_start()
     
     def remove_camera(self, camera):
         self.cameras.remove(camera)
+        camera.on_end()
         camera.layer = None
     
     def add_plugin(self, plugin):
@@ -294,14 +304,9 @@ class Layer(EventNotifier):
         for i in range(len(self.actors)-1, -1, -1):
             actor = actors[i]
             if actor.killed:
-                actor.cleanup
+                actor.on_end()
                 del actors[i]
 
-#        for actor in self.actors:
-#            if actor.killed:
-#                actor.cleanup()
-#        self.actors = [actor for actor in self.actors if not actor.killed]
-        
         self.z_order()
         
         for plugin in self.update_plugins:
@@ -320,10 +325,11 @@ class Layer(EventNotifier):
         self.actors.append(actor)
         actor.layer = self
         if self.level.game:
-            actor.initialize()
+            actor.on_start()
     
     def remove_actor(self, actor):
         self.actors.remove(actor)
+        actor.on_end()
         actor.layer = None
 
 
@@ -377,9 +383,13 @@ class BaseActor(EventNotifier):
         action.pause(dt == 0)
         action.do_update(game, dt)
     
-    def initialize(self):
-        self.behavior.initialize()
+    def on_start(self):
+        self.behavior.on_start()
     
+    def on_end(self):
+        self.behavior.on_end()
+        self.behavior.actor = None
+
     def update(self, game, dt):
         for action in self.actions:
             self._do_action(action, game, dt)
@@ -388,9 +398,6 @@ class BaseActor(EventNotifier):
     
     def draw(self, window):
         pass
-    
-    def cleanup(self):
-        self.behavior.cleanup()
     
     def add_action(self, action, name=''):
         self.actions.append(action)
