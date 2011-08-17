@@ -177,8 +177,8 @@ class Game(EventNotifier):
             self._level.on_end()
             self._level.game = None
         self._level = level
-        level.on_start()
         level.game = self
+        level.on_start()
     
     level = property(get_level, set_level)
     
