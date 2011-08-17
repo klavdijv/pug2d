@@ -52,6 +52,21 @@ class GameClock(object):
         return dt
 
 
+class FPSAvg(object):
+    def __init__(self):
+        self.sum = 0.0
+        self.avg = 0.0
+        self.values = []
+    
+    def add(self, value):
+        self.sum += value
+        values = self.values
+        if len(values) > 99:
+            self.sum -= values.pop(0)
+            self.avg = self.sum/100.0
+        self.values.append(value)
+
+
 class Level(EventNotifier):
     
     def __init__(self):
@@ -124,6 +139,7 @@ class Game(EventNotifier):
         self.fps_text = sf.Text('', sf.Font.DEFAULT_FONT, 24)
         self.fps_text.position = (10, 10)
         self.fps_text.color = sf.Color.BLACK
+        self.fps_avg = FPSAvg()
         self.title = title
         videomode, style = self._get_videomode()
         self.window = sf.RenderWindow(videomode, title, style)
@@ -219,13 +235,14 @@ class Game(EventNotifier):
             self.before_draw()
             self._level.draw(self.window)
             self.after_draw()
+            try:
+                fps = (1000.0/self.window.frame_time)
+                self.fps_avg.add(fps)
+            except ZeroDivisionError:
+                pass
             if self.show_fps:
                 self.window.view = self.window.default_view
-                try:
-                    fps = (1000.0/self.window.frame_time)
-                    self.fps_text.string = '{:7.2f}'.format(fps) 
-                except ZeroDivisionError:
-                    pass
+                self.fps_text.string = '{:7.2f}'.format(self.fps_avg.avg) 
                 self.window.draw(self.fps_text)
             self.window.display()
             self.on_loop_end()
