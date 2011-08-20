@@ -287,7 +287,7 @@ class Layer(EventNotifier):
     def add_camera(self, camera):
         self.cameras.append(camera)
         camera.layer = self
-        if self.level.game:
+        if getattr(self.level, 'game', None):
             camera.on_start()
     
     def remove_camera(self, camera):
@@ -341,7 +341,7 @@ class Layer(EventNotifier):
     def add_actor(self, actor):
         self.actors.append(actor)
         actor.layer = self
-        if self.level.game:
+        if getattr(self.level, 'game', None):
             actor.on_start()
     
     def remove_actor(self, actor):
@@ -355,7 +355,7 @@ class OffscreenLayer(Layer):
 # (Intel graphics cards on Linux, for example)
     def __init__(self, width, height):
         super(OffscreenLayer, self).__init__()
-        self.window = sf.RenderImage(width, height)
+        self.window = sf.RenderTexture(width, height)
         sprite = sf.Sprite()
         sprite.position = (0, 0)
         self.container = Actor(sprite)
@@ -366,7 +366,7 @@ class OffscreenLayer(Layer):
         super(OffscreenLayer, self).draw(offscreen)
         offscreen.display()
         container = self.container.object
-        container.image = offscreen.image
+        container.texture = offscreen.texture
         window.draw(container, self.container.shader)
 
 

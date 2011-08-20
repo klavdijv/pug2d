@@ -16,7 +16,7 @@ class Level1(pymunk_phy.PymunkLevel):
         ground_shape = pm.Poly(ground, [(0, 0), (800,0), (800, 50), (0, 50)])
         space.add_static(ground_shape)
         
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
 #        inert = pm.moment_for_circle(10.0, 50.0, 50.0)
         for x in range(100, 800, 200):
             sprite = sf.Sprite(self.im0)

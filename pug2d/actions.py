@@ -333,9 +333,9 @@ class Animate(TimedAction):
     
     def on_assign(self, actor):
         super(Animate, self).on_assign(actor)
-        image = actor.object.image
-        self.frame_width = image.width//self.num_cols
-        self.frame_height = image.height//self.num_rows
+        tex = actor.object.texture
+        self.frame_width = tex.width//self.num_cols
+        self.frame_height = tex.height//self.num_rows
     
     def update(self, game, dt):
         sprite = self.owner.object

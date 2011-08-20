@@ -39,7 +39,7 @@ class Level1(core.Level):
         layer = core.Layer()
         self.add_layer(layer)
         
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
         for y in range(0, 501, 100):
             for x in range(0, 701, 100):
                 s0 = sf.Sprite(self.im0)

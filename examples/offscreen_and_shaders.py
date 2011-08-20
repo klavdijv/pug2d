@@ -26,11 +26,11 @@ class Level1(core.Level):
         layer.container.object.position = (100, 100)
         
         shader = sf.Shader.load_from_file(b'edge.sfx')
-        shader.set_texture(b'texture', layer.window.image)
+        shader.set_texture(b'texture', layer.window.texture)
         layer.container.shader = shader
 
         self.add_layer(layer)
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
         for x in range(50, 600, 50):
             for y in range(50, 400, 80):
                 act = Actor1(self.im0, x, y)

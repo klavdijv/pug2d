@@ -21,7 +21,7 @@ class Level1(Box2DLevel):
                                              shapes=b2.polygonShape(box=(50, 5))
                                              )
         
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
         for y in range(0, 500, 120):
             for x in range(200, 700, 120):
                 sprite = sf.Sprite(self.im0)

@@ -30,7 +30,7 @@ class Level1(core.Level):
         super(Level1, self).__init__()
         layer = core.Layer()
         self.add_layer(layer)
-        self.im0 = sf.Image.load_from_file(b'rpg_sprite_walk.png')
+        self.im0 = sf.Texture.load_from_file(b'rpg_sprite_walk.png')
         num = 0
         for x in range(50, 600, 50):
             for y in range(50, 400, 80):

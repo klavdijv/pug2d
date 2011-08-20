@@ -20,7 +20,7 @@ class Level1(core.Level):
         self.speed_x = 100.0
         self.speed_y = 50.0
         
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
         for y in range(0, 500, 100):
             for x in range(0, 800, 100):
                 sprite = sf.Sprite(self.im0)

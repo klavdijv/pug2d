@@ -80,7 +80,7 @@ class Level1(core.Level):
         layer.add_plugin(coll_group)
         layer.add_plugin(Canvas())
         self.add_layer(layer)
-        self.im0 = sf.Image.load_from_file(b'princess.png')
+        self.im0 = sf.Texture.load_from_file(b'princess.png')
         for x in (100, 220):
             act = Actor1(self.im0, x, 200)
             layer.add_actor(act)
