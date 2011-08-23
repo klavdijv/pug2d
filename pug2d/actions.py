@@ -2,6 +2,7 @@ import sf
 import bisect
 from .core import GameClock
 from .events import EventNotifier
+from .support import InputEvent, InputEventHandler, InputHandler
 
 class Action(EventNotifier):
     _id_ = ''
@@ -359,6 +360,39 @@ class Animate(TimedAction):
     
     def resume(self):
         self.clock.time_factor = self.old_time_factor
+
+
+class EightDirMovement(Action):
+    def __init__(self, vx=100, vy=100):
+        super(EightDirMovement, self).__init__()
+        self.vx = vx
+        self.vy = vy
+        self.dx = self.dy = 0
+        self.dt = 0.0
+        event_handlers = [
+            InputEventHandler(InputEvent('key', sf.Keyboard.LEFT),
+                              self._move, -1, 0),
+            InputEventHandler(InputEvent('key', sf.Keyboard.UP),
+                              self._move, 0, -1),
+            InputEventHandler(InputEvent('key', sf.Keyboard.RIGHT),
+                              self._move, 1, 0),
+            InputEventHandler(InputEvent('key', sf.Keyboard.DOWN),
+                              self._move, 0, 1)
+                           ]
+        self.input_handler = InputHandler(*event_handlers)
+    
+    def _move(self, dir_x, dir_y):
+        if dir_x:
+            self.dx = self.dt*dir_x*self.vx
+        if dir_y:
+            self.dy = self.dt*dir_y*self.vy
+    
+    def update(self, game, dt):
+        behavior = self.owner.behavior
+        self.dt = dt
+        self.dx = self.dy = 0
+        self.input_handler()
+        behavior.move(self.dx, self.dy)
 
 
 # Camera actions
