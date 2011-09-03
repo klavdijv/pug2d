@@ -370,10 +370,10 @@ class EightDirMovement(Action):
         self.dx = self.dy = 0
         self.dt = 0.0
         self.input_handler = handler = InputHandler()
-        handler.add('left', InputEvent('single', ('key', sf.Keyboard.LEFT)))
-        handler.add('right', InputEvent('single', ('key', sf.Keyboard.RIGHT)))
-        handler.add('up', InputEvent('single', ('key', sf.Keyboard.UP)))
-        handler.add('down', InputEvent('single', ('key', sf.Keyboard.DOWN)))
+        handler['left'] = InputEvent('single', ('key', sf.Keyboard.LEFT))
+        handler['right'] = InputEvent('single', ('key', sf.Keyboard.RIGHT))
+        handler['up'] = InputEvent('single', ('key', sf.Keyboard.UP))
+        handler['down'] = InputEvent('single', ('key', sf.Keyboard.DOWN))
     
     def update(self, game, dt):
         behavior = self.owner.behavior

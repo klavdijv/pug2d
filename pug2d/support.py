@@ -77,14 +77,17 @@ class InputEventHandler(object):
 
 class InputHandler(object):
     def __init__(self):
-        self.input_event_handlers = []
+        self.input_event_handlers = {}
     
-    def add(self, name, input_event):
-        self.input_event_handlers.append(InputEventHandler(name, input_event))
+    def __getitem__(self, name):
+        return self.input_event_handlers[name]
+    
+    def __setitem__(self, name, input_event):
+        self.input_event_handlers[name] = InputEventHandler(name, input_event)
     
     def __call__(self):
         res = []
-        for event_handler in self.input_event_handlers:
+        for event_handler in self.input_event_handlers.values():
             event_name = event_handler()
             if event_name:
                 res.append(event_name)
