@@ -350,9 +350,9 @@ class Animate(TimedAction):
                 time0 = time0 % self.time
         frame_indx = bisect.bisect(self.frame_times, time0)-1
         row, col = self._unpack_frame(self.start+frame_indx)
-        sprite.sub_rect = sf.IntRect(col*self.frame_width,
-                                     row*self.frame_height,
-                                     self.frame_width, self.frame_height)
+        sprite.set_sub_rect(sf.IntRect(col*self.frame_width,
+                                       row*self.frame_height,
+                                       self.frame_width, self.frame_height))
 
     def stop(self):
         self.old_time_factor = self.clock.time_factor
